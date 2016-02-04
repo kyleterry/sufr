@@ -7,6 +7,7 @@ import (
 
 var tempmap = map[string]*template.Template{
 	"url-index": createTemplate("templates/base.html", "templates/url-index.html"),
+	"url-new":   createTemplate("templates/base.html", "templates/url-new.html"),
 }
 
 func renderTemplate(w http.ResponseWriter, t string, data interface{}) error {
