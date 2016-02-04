@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -10,12 +11,23 @@ import (
 	"strings"
 )
 
+const (
+	DatabaseName   = "sufr.db"
+	BucketNameRoot = "sufr"
+	BucketNameURL  = "url"
+	BucketNameTag  = "tag"
+)
+
 var (
 	ApplicationBind string
 	DataDir         string
+	DatabaseFile    string
 	TemplateDir     string
 	StaticDir       string
 	RootDir         string
+
+	ErrDatabaseAlreadyOpen = errors.New("Database is already open")
+	ErrKeyNotFound         = errors.New("Key doesn't exist in DB")
 )
 
 func New() {
@@ -30,9 +42,11 @@ func New() {
 	flag.StringVar(&StaticDir, "static-dir", defaultStaticDir, "Location where static assets are stored")
 
 	flag.Parse()
+
+	DatabaseFile = path.Join(DataDir, DatabaseName)
 }
 
-func ExecPath() (string, error) {
+func execPath() (string, error) {
 	f, err := exec.LookPath(os.Args[0])
 	if err != nil {
 		return "", err
@@ -44,7 +58,7 @@ func ExecPath() (string, error) {
 // If it can't fetch it from the config file, it will just use the execution path.
 // Returns a string
 func findWorkingDir() string {
-	path, err := ExecPath()
+	path, err := execPath()
 	if err != nil {
 		panic("Cannot find exec path")
 	}
