@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -9,22 +10,32 @@ import (
 	"github.com/kyleterry/sufr/db"
 )
 
+var (
+	router   = mux.NewRouter()
+	database *db.SufrDB
+)
+
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
 type Sufr struct {
-	Router *mux.Router
-	DB     *db.SufrDB
 }
 
 // New created a new pointer to Sufr
 func New() *Sufr {
 	log.Println("Creating new Sufr instance")
-	app := &Sufr{Router: mux.NewRouter()}
-	app.Router.HandleFunc("/", app.urlIndexHandler)
-	app.Router.HandleFunc("/url/new", app.urlNewHandler)
-	app.Router.PathPrefix("/").Handler(staticHandler)
-	app.DB = db.New(config.DatabaseFile)
-	err := app.DB.Open()
+	app := &Sufr{}
+	router.HandleFunc("/", app.urlIndexHandler).Name("url-index")
+	router.HandleFunc("/url/new", app.urlNewHandler).Name("url-new")
+	router.HandleFunc("/url/submit", app.urlSubmitHandler).Methods("POST").Name("url-submit")
+	router.HandleFunc("/url/{id:[0-9]+}", app.urlViewHandler).Name("url-view")
+	router.HandleFunc("/url/{id:[0-9]+}/edit", app.urlEditHandler).Name("url-edit")
+	router.HandleFunc("/url/{id:[0-9]+}/save", app.urlSaveHandler).Methods("POST").Name("url-save")
+	router.HandleFunc("/url/{id:[0-9]+}/delete", app.urlDeleteHandler).Name("url-delete")
+	router.HandleFunc("/tag", app.tagIndexHandler).Name("tag-index")
+	router.HandleFunc("/tag/{id:[0-9]+}", app.tagViewHandler).Name("tag-view")
+	router.PathPrefix("/").Handler(staticHandler)
+	database = db.New(config.DatabaseFile)
+	err := database.Open()
 	// Panic if we can't open the database
 	if err != nil {
 		log.Panic(err)
