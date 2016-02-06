@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/mux"
 	"github.com/kyleterry/sufr/config"
 )
@@ -38,6 +39,10 @@ func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
 	// validate URL here
+	if !govalidator.IsURL(urlstring) {
+		// flash add error
+		// redirect back to url-new
+	}
 	title, err := getPageTitle(urlstring)
 	if err != nil {
 		// Add flash about title not being fetchable

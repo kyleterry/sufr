@@ -1,8 +1,10 @@
-hash: c14fa1ec2b73a4aa1c8724548acddfb85a698c0c9949293a6014912fb7e7b2fe
-updated: 2016-02-06T00:18:32.460551499-08:00
+hash: 0b165bd622a11df43a783c3621ef9cd38e33e8f2c6c4dc4b0ce8d8892b905b24
+updated: 2016-02-06T01:21:11.982667983-08:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
+- name: github.com/asaskevich/govalidator
+  version: 9699ab6b38bee2e02cd3fe8b99ecf67665395c96
 - name: github.com/boltdb/bolt
   version: ee4a0888a9abe7eefe5a0992ca4cb06864839873
 - name: github.com/gorilla/context
