@@ -30,18 +30,10 @@ func (mc MiddlewareChain) SetHandlerFunc(fn http.HandlerFunc) http.Handler {
 	return mc.SetHandler(http.HandlerFunc(fn))
 }
 
-func TestM1(h http.Handler) http.Handler {
+func AuthMiddleware(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("entering m1")
 		h.ServeHTTP(w, r)
 		log.Println("exiting m1")
-	})
-}
-
-func TestM2(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("entering m2")
-		h.ServeHTTP(w, r)
-		log.Println("exiting m2")
 	})
 }

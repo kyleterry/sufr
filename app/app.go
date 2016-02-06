@@ -33,6 +33,7 @@ func New() *Sufr {
 	router.HandleFunc("/url/{id:[0-9]+}/delete", app.urlDeleteHandler).Name("url-delete")
 	router.HandleFunc("/tag", app.tagIndexHandler).Name("tag-index")
 	router.HandleFunc("/tag/{id:[0-9]+}", app.tagViewHandler).Name("tag-view")
+	router.HandleFunc("/import/shitbucket", app.shitbucketImportHandler).Methods("POST", "GET").Name("shitbucket-import")
 	router.PathPrefix("/").Handler(staticHandler)
 	database = db.New(config.DatabaseFile)
 	err := database.Open()

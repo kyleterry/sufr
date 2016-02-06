@@ -7,12 +7,13 @@ import (
 )
 
 var templateMap = map[string]*template.Template{
-	"url-index": createTemplate("templates/base.html", "templates/url-index.html"),
-	"url-new":   createTemplate("templates/base.html", "templates/url-new.html"),
-	"url-view":  createTemplate("templates/base.html", "templates/url-view.html"),
-	"url-edit":  createTemplate("templates/base.html", "templates/url-edit.html"),
-	"tag-index": createTemplate("templates/base.html", "templates/tag-index.html"),
-	"tag-view":  createTemplate("templates/base.html", "templates/tag-view.html"),
+	"url-index":         createTemplate("templates/base.html", "templates/url-index.html"),
+	"url-new":           createTemplate("templates/base.html", "templates/url-new.html"),
+	"url-view":          createTemplate("templates/base.html", "templates/url-view.html"),
+	"url-edit":          createTemplate("templates/base.html", "templates/url-edit.html"),
+	"tag-index":         createTemplate("templates/base.html", "templates/tag-index.html"),
+	"tag-view":          createTemplate("templates/base.html", "templates/tag-view.html"),
+	"shitbucket-import": createTemplate("templates/base.html", "templates/shitbucket-import.html"),
 }
 
 var templateFuncs = template.FuncMap{

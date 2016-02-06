@@ -76,6 +76,7 @@
             no dashboard yet -->
             <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-navicon"></i></a></li>
             <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i></a></li>
+            <li {{if eq $active "imports"}}class="active"{{end}}><a href="{{ reverse "shitbucket-import" }}"><i class="fa fa-cloud-download"></i></a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a href="{{ reverse "url-new" }}"><i class="fa fa-plus"></i> Add URL</a></li>
