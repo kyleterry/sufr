@@ -2,18 +2,32 @@ package app
 
 import (
 	"html/template"
+	"log"
 	"net/http"
 )
 
-var tempmap = map[string]*template.Template{
+var templateMap = map[string]*template.Template{
 	"url-index": createTemplate("templates/base.html", "templates/url-index.html"),
 	"url-new":   createTemplate("templates/base.html", "templates/url-new.html"),
+	"url-view":  createTemplate("templates/base.html", "templates/url-view.html"),
+	"url-edit":  createTemplate("templates/base.html", "templates/url-edit.html"),
+	"tag-index": createTemplate("templates/base.html", "templates/tag-index.html"),
+	"tag-view":  createTemplate("templates/base.html", "templates/tag-view.html"),
 }
 
-func renderTemplate(w http.ResponseWriter, t string, data interface{}) error {
-	return tempmap[t].ExecuteTemplate(w, "base", data)
+var templateFuncs = template.FuncMap{
+	"reverse": reverse,
+}
+
+func renderTemplate(w http.ResponseWriter, name string, data interface{}) error {
+	t, ok := templateMap[name]
+	if !ok {
+		log.Fatalf("missing template %s", name)
+	}
+	return t.ExecuteTemplate(w, "base", data)
 }
 
 func createTemplate(files ...string) *template.Template {
-	return template.Must(template.New("*").ParseFiles(files...))
+	tmpl := template.New("*").Funcs(templateFuncs)
+	return template.Must(tmpl.ParseFiles(files...))
 }

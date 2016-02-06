@@ -2,6 +2,8 @@ package db
 
 import (
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/boltdb/bolt"
@@ -20,7 +22,7 @@ type SufrItem interface {
 	GetID() uint64
 	SetID(uint64)
 	Type() string
-	Serialize() []byte
+	Serialize() ([]byte, error)
 }
 
 // New creates and returns a new pointer to a SufrDB struct
@@ -82,15 +84,26 @@ func (sdb *SufrDB) Put(item SufrItem) error {
 			id, _ = b.NextSequence()
 			item.SetID(id)
 		}
-		b.Put(itob(id), item.Serialize())
+		content, err := item.Serialize()
+		if err != nil {
+			return err
+		}
+		b.Put(itob(id), content)
 		return nil
 	})
 	return err
 }
 
 // Get will return raw bytes for an item at `id` or return an error
-func (sdb *SufrDB) Get(id int, bucket string) ([]byte, error) {
-	return []byte{}, nil
+func (sdb *SufrDB) Get(id uint64, bucket string) ([]byte, error) {
+	var item []byte
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
+		b := rootBucket.Bucket([]byte(bucket))
+		item = b.Get(itob(id))
+		return nil
+	})
+	return item, err
 }
 
 // GetAll is used to fetch all of the recods for a particular bucket
@@ -108,6 +121,48 @@ func (sdb *SufrDB) GetAll(bucket string) ([][]byte, error) {
 		return nil
 	})
 	return items, err
+}
+
+// Delete will return raw bytes for an item at `id` or return an error
+func (sdb *SufrDB) Delete(id uint64, bucket string) error {
+	err := sdb.database.Update(func(tx *bolt.Tx) error {
+		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
+		b := rootBucket.Bucket([]byte(bucket))
+		return b.Delete(itob(id))
+	})
+	return err
+}
+
+// GetValuesByField will find objects who's `fieldname` value matches any of the `values`
+// If any of the objects are lacking `fieldname` when deserialized, then it returns an error
+// Return [][]byte, a []string of objects not found or an error
+func (sdb *SufrDB) GetValuesByField(fieldname, bucket string, values ...string) ([][]byte, []string, error) {
+	items := [][]byte{}
+	err := sdb.database.Update(func(tx *bolt.Tx) error {
+		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
+		b := rootBucket.Bucket([]byte(bucket))
+		err := b.ForEach(func(k []byte, v []byte) error {
+			j := make(map[string]interface{})
+			if err := json.Unmarshal(v, &j); err != nil {
+				return err
+			}
+			if _, ok := j[fieldname]; !ok {
+				return fmt.Errorf("Field `%s` doesn't exist", fieldname)
+			}
+			valuestring := j[fieldname].(string)
+			for i, need := range values {
+				if need == valuestring {
+					items = append(items, v)
+					// If we find a match, remove this one from the values slice so we can return
+					// it as notfound values
+					values = append(values[:i], values[i+1:]...)
+				}
+			}
+			return nil
+		})
+		return err
+	})
+	return items, values, err
 }
 
 func itob(v uint64) []byte {

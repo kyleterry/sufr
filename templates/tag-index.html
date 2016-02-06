@@ -1,3 +1,4 @@
+{{ define "content" }}
 <div class="row">
   <div class="page-header">
     <h2>Tags</h2>
@@ -5,12 +6,12 @@
 
   <div class="row">
     <div class="col-lg-12">
-      {{if .Count}}
       {{range $tag := .Tags}}
-      <a class="btn" href="{{$tag.Uri}}">{{ $tag.Name }} ({{$tag.UrlCount}})</a>
-      {{end}}
+      <a class="btn" href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }} ({{$tag.URLCount}})</a>
       {{else}}
+      Nothing.
       {{end}}
     </div>
   </div>
 </div>
+{{ end }}

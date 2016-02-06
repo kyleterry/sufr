@@ -5,24 +5,42 @@
     <div class="url-container">
 
       <h3>
-        <a href="{{ $url.Url }}" target="_blank">{{ $url.UrlTitle }}</a>
+        <a href="{{ $url.URL }}" target="_blank">{{ $url.Title }}</a>
       </h3>
 
-      <p class="text-muted"><small><a href="{{ $url.Uri }}">{{ $url.FormattedCreatedAt }}</a> - {{ $url.Url }}</small></p>
+      <p class="text-muted"><small><a href="{{ reverse "url-view" "id" $url.ID }}">{{ $url.FormattedCreatedAt }}</a> - {{ $url.URL }}</small></p>
 
       {{ if $url.HasTags }}
-      <i class="fa fa-tag"></i> {{ range $tag := $url.Tags }}<a href="/tag/{{ $tag }}">{{ $tag }}</a> {{ end }}
+      <i class="fa fa-tag"></i> {{ range $tag := $url.GetTags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
       {{ end }}
 
       <div class="url-actions">
         <span class="hidden">
-          <a class="btn" href="{{ $url.ManageTagsUri }}">Edit</a> <a class="btn text-danger" href="{{ $url.DeleteUri }}">Delete</a>
+          <a class="btn" href="{{ reverse "url-edit" "id" $url.ID }}">Edit</a>
+          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" $url.ID }}" data-toggle="modal" data-target="#confirm-delete">Delete</a>
         </span>
       </div>
     </div>
   </div>
 </div>
 {{ end }}
+
+{{ define "modal" }}
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-body">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <p>
+          Are you sure you want to delete this URL?
+        </p>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <a class="btn btn-danger btn-ok">Delete</a>
+      </div>
+    </div>
+  </div>
+</div>
+{{end}}
 
 {{ define "title" }} Minimalistic Bookmarking{{ end }}
 
@@ -40,7 +58,7 @@
   </head>
   <body>
     <!-- Fixed navbar -->
-    <div id="top" class="backgrounded navbar navbar-default">
+    <div id="top" class="navbar navbar-default">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -48,28 +66,29 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="/">Shitbucket</a>
+          <a class="navbar-brand" href="{{ reverse "url-index" }}">SUFR</a>
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             {{ $active := .ActiveTab }}
+            <!--
             <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
+            no dashboard yet -->
             <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-navicon"></i></a></li>
-            <li {{if eq $active "tags"}}class="active"{{end}}><a href="/tag/"><i class="fa fa-tags"></i></a></li>
+            <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i></a></li>
           </ul>
-          <ul class="nav navbar-nav pull-right">
-            <li><a href="/url/new"><span class="navbar-highlight"><i class="fa fa-plus"></i> Add URL</span></a></li>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{{ reverse "url-new" }}"><i class="fa fa-plus"></i> Add URL</a></li>
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
 
-    <div id="content">
-      <div class="container">
+    <div class="container" id="content">
+      <div class="col-xs-12">
         {{ template "content" . }}
       </div>
     </div>
-
 
     <footer class="footer">
       <div class="container">
@@ -77,15 +96,15 @@
         © Kyle Terry
         </p>
         <p class="text-muted">
-        <a href="https://github.com/kyleterry/shitbucket"><i class="fa fa-github"></i> Github</a>
+        <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a>
         ·
-        <a href="https://github.com/kyleterry/shitbucket/issues">Issues</a>
+        <a href="https://github.com/kyleterry/sufr/issues">Issues</a>
         ·
         <a href="#top">Back to top</a>
         </p>
       </div>
     </footer>
-
+    {{ template "modal" . }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
     <script src="/static/js/app.js"></script>

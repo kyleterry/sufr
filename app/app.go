@@ -44,5 +44,18 @@ func New() *Sufr {
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.Router.ServeHTTP(w, r)
+	router.ServeHTTP(w, r)
+}
+
+// reverse Uses gorilla mux to give us a uri path by name. This is attached to template Funcs
+func reverse(name string, params ...interface{}) string {
+	s := make([]string, len(params))
+	for _, param := range params {
+		s = append(s, fmt.Sprint(param))
+	}
+	url, err := router.GetRoute(name).URL(s...)
+	if err != nil {
+		panic(err)
+	}
+	return url.Path
 }
