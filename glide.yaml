@@ -1,0 +1,5 @@
+package: github.com/kyleterry/sufr
+import:
+- package: github.com/PuerkitoBio/goquery
+- package: github.com/boltdb/bolt
+- package: github.com/gorilla/mux
