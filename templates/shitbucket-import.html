@@ -9,7 +9,7 @@
       <form action="{{ reverse "shitbucket-import" }}" method="POST">
         <div class="form-group">
           <label for="url" class="control-label">Shitbucket URL</label>
-          <input class="form-control" id="url-submit" type="text" name="url" placeholder="https://example.com">
+          <input class="form-control" id="url-submit" type="text" name="url" placeholder="https://example.com" autocapitalize="none">
           <span id="helpBlock" class="help-block">Don't forget to add any basic auth creds to the URL</span>
         </div>
         <button type="submit" class="btn btn-default">Import</button>
