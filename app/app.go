@@ -9,6 +9,7 @@ import (
 	"unicode"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/kyleterry/sufr/config"
@@ -20,6 +21,10 @@ var (
 	store    = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 	database *db.SufrDB
 )
+
+type templatecontext int
+
+const TemplateContext templatecontext = 0
 
 type errorHandler func(http.ResponseWriter, *http.Request) error
 
@@ -64,6 +69,20 @@ func New() *Sufr {
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	cxt := make(map[string]interface{})
+	flashes := make(map[string][]interface{})
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		log.Println(err)
+	}
+	flashes["danger"] = session.Flashes("danger")
+	flashes["success"] = session.Flashes("success")
+	flashes["warning"] = session.Flashes("warning")
+	cxt["Flashes"] = flashes
+	session.Save(r, w)
+
+	context.Set(r, TemplateContext, cxt)
+
 	router.ServeHTTP(w, r)
 }
 

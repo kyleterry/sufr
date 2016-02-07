@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/kyleterry/sufr/config"
 )
@@ -21,6 +22,7 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
 	renderTemplate(w, "url-index", map[string]interface{}{
 		"ActiveTab": "urls",
 		"Title":     "URLs",
@@ -31,17 +33,10 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
-	flashes := make(map[string][]interface{})
-	session, err := store.Get(r, "flashes")
-	if err != nil {
-		return err
-	}
-	flashes["danger"] = session.Flashes("error")
-	session.Save(r, w)
-	renderTemplate(w, "url-new", map[string]interface{}{
-		"ActiveTab": "urls",
-		"Flashes":   flashes,
-	})
+	ctx := context.Get(r, TemplateContext).(map[string]interface{})
+	ctx["ActiveTab"] = "urls"
+	fmt.Println(ctx)
+	renderTemplate(w, "url-new", ctx)
 	return nil
 }
 
@@ -53,7 +48,7 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 		if err != nil {
 			return err
 		}
-		session.AddFlash(fmt.Sprintf("URL \"%s\" is not valid", urlstring), "error")
+		session.AddFlash(fmt.Sprintf("URL \"%s\" is not valid", urlstring), "danger")
 		session.Save(r, w)
 		http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
 		return nil
