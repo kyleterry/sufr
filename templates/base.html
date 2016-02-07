@@ -46,6 +46,17 @@
 </div>
 {{end}}
 
+{{ define "flash" }}
+  {{ range $key, $values := .Flashes }}
+  {{ range $message := $values }}
+    <div class="alert alert-{{ $key }}">
+      <button class="close" data-dismiss="alert">×</button>
+      {{ $message }}
+    </div>
+  {{ end }}
+  {{ end }}
+{{ end }}
+
 {{ define "title" }} Minimalistic Bookmarking{{ end }}
 
 {{ define "base" }}
@@ -91,6 +102,7 @@
 
     <div class="container" id="content">
       <div class="col-xs-12">
+        {{ template "flash" . }}
         {{ template "content" . }}
       </div>
     </div>

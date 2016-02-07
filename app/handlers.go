@@ -39,6 +39,7 @@ func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
 	// validate URL here
+	fmt.Println(govalidator.IsURL(urlstring))
 	if !govalidator.IsURL(urlstring) {
 		// flash add error
 		// redirect back to url-new
