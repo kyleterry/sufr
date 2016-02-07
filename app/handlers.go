@@ -35,7 +35,6 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["ActiveTab"] = "urls"
-	fmt.Println(ctx)
 	renderTemplate(w, "url-new", ctx)
 	return nil
 }
