@@ -1,12 +1,12 @@
 hash: 0b165bd622a11df43a783c3621ef9cd38e33e8f2c6c4dc4b0ce8d8892b905b24
-updated: 2016-02-06T01:21:11.982667983-08:00
+updated: 2016-02-06T22:23:10.650780968-08:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/asaskevich/govalidator
   version: 9699ab6b38bee2e02cd3fe8b99ecf67665395c96
 - name: github.com/boltdb/bolt
-  version: ee4a0888a9abe7eefe5a0992ca4cb06864839873
+  version: 2f846c3551b76d7710f159be840d66c3d064abbe
 - name: github.com/gorilla/context
   version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
 - name: github.com/gorilla/mux
@@ -18,5 +18,5 @@ imports:
 - name: golang.org/x/net
   version: 7f88271ea9913b72aca44fa7fc8af919eacc17ce
 - name: golang.org/x/text
-  version: db2353fc1b663d79d1001e206afc02a5ec9f4291
+  version: 6b2a19a9a1a1b404186b838a6b9d0c15bc9cc160
 devImports: []
