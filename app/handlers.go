@@ -44,11 +44,15 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
 	if !govalidator.IsURL(urlstring) {
+		errormessage := "URL is required"
+		if urlstring != "" {
+			errormessage = fmt.Sprintf("URL \"%s\" is not valid", urlstring)
+		}
 		session, err := store.Get(r, "flashes")
 		if err != nil {
 			return err
 		}
-		session.AddFlash(fmt.Sprintf("URL \"%s\" is not valid", urlstring), "danger")
+		session.AddFlash(errormessage, "danger")
 		session.Save(r, w)
 		http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
 		return nil
