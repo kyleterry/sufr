@@ -15,11 +15,11 @@ var staticHandler = http.StripPrefix(
 	"/static/",
 	http.FileServer(http.Dir("static")))
 
-func urlIndexHandler(w http.ResponseWriter, r *http.Request) {
+func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	rawbytes, err := database.GetAll(config.BucketNameURL)
 	urls := DeserializeURLs(rawbytes...)
 	if err != nil {
-		http.Error(w, "Internal Error: Sufr is down!", http.StatusInternalServerError)
+		return err
 	}
 	renderTemplate(w, "url-index", map[string]interface{}{
 		"ActiveTab": "urls",
@@ -27,14 +27,14 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) {
 		"Count":     len(urls),
 		"URLs":      urls,
 	})
+	return nil
 }
 
-func urlNewHandler(w http.ResponseWriter, r *http.Request) {
+func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	flashes := make(map[string][]interface{})
 	session, err := store.Get(r, "flashes")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return err
 	}
 	flashes["danger"] = session.Flashes("error")
 	session.Save(r, w)
@@ -42,21 +42,21 @@ func urlNewHandler(w http.ResponseWriter, r *http.Request) {
 		"ActiveTab": "urls",
 		"Flashes":   flashes,
 	})
+	return nil
 }
 
-func urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
+func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
 	if !govalidator.IsURL(urlstring) {
 		session, err := store.Get(r, "flashes")
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return err
 		}
 		session.AddFlash(fmt.Sprintf("URL \"%s\" is not valid", urlstring), "error")
 		session.Save(r, w)
 		http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
-		return
+		return nil
 	}
 
 	title, err := getPageTitle(urlstring)
@@ -75,22 +75,22 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = url.SaveWithTags(tagsstring)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error saving URL: %s", err), http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
+	return nil
 }
 
-func urlViewHandler(w http.ResponseWriter, r *http.Request) {
+func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 	rawbytes, err := database.Get(id, config.BucketNameURL)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	url := DeserializeURL(rawbytes)
@@ -99,17 +99,18 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) {
 		"ActiveTab": "urls",
 		"Url":       url,
 	})
+	return nil
 }
 
-func urlEditHandler(w http.ResponseWriter, r *http.Request) {
+func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 	rawbytes, err := database.Get(id, config.BucketNameURL)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	url := DeserializeURL(rawbytes)
@@ -119,9 +120,10 @@ func urlEditHandler(w http.ResponseWriter, r *http.Request) {
 		"Url":       url,
 	})
 
+	return nil
 }
 
-func urlSaveHandler(w http.ResponseWriter, r *http.Request) {
+func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 	titlestring := r.FormValue("title")
 	tagsstring := r.FormValue("tags")
 	vars := mux.Vars(r)
@@ -132,7 +134,7 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) {
 
 	rawbytes, err := database.Get(id, config.BucketNameURL)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	url := DeserializeURL(rawbytes)
@@ -140,54 +142,57 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) {
 	url.UpdatedAt = time.Now()
 	err = url.SaveWithTags(tagsstring)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error saving URL: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
+	return nil
 }
 
-func urlDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	rawbytes, err := database.Get(id, config.BucketNameURL)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	url := DeserializeURL(rawbytes)
 	err = url.Delete()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error deleting URL: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
+	return nil
 }
 
-func tagIndexHandler(w http.ResponseWriter, r *http.Request) {
+func tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	rawbytes, err := database.GetAll(config.BucketNameTag)
 	tags := DeserializeTags(rawbytes...)
 	if err != nil {
-		http.Error(w, "Internal Error: Sufr is down!", http.StatusInternalServerError)
+		return err
 	}
 	renderTemplate(w, "tag-index", map[string]interface{}{
 		"ActiveTab": "tags",
 		"Tags":      tags,
 	})
+	return nil
 }
 
-func tagViewHandler(w http.ResponseWriter, r *http.Request) {
+func tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 	rawbytes, err := database.Get(id, config.BucketNameTag)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
+		return err
 	}
 
 	tag := DeserializeTag(rawbytes)
@@ -198,4 +203,5 @@ func tagViewHandler(w http.ResponseWriter, r *http.Request) {
 		"URLs":      tag.GetURLs(),
 		"Count":     len(tag.URLs),
 	})
+	return nil
 }

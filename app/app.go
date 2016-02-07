@@ -21,6 +21,16 @@ var (
 	database *db.SufrDB
 )
 
+type errorHandler func(http.ResponseWriter, *http.Request) error
+
+func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	err := fn(w, r)
+	if err != nil {
+		log.Printf("Got error while processing the request: %s\n", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
 type Sufr struct {
@@ -31,16 +41,16 @@ func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
-	router.HandleFunc("/", urlIndexHandler).Name("url-index")
-	router.HandleFunc("/url/new", urlNewHandler).Name("url-new")
-	router.HandleFunc("/url/submit", urlSubmitHandler).Methods("POST").Name("url-submit")
-	router.HandleFunc("/url/{id:[0-9]+}", urlViewHandler).Name("url-view")
-	router.HandleFunc("/url/{id:[0-9]+}/edit", urlEditHandler).Name("url-edit")
-	router.HandleFunc("/url/{id:[0-9]+}/save", urlSaveHandler).Methods("POST").Name("url-save")
-	router.HandleFunc("/url/{id:[0-9]+}/delete", urlDeleteHandler).Name("url-delete")
-	router.HandleFunc("/tag", tagIndexHandler).Name("tag-index")
-	router.HandleFunc("/tag/{id:[0-9]+}", tagViewHandler).Name("tag-view")
-	router.HandleFunc("/import/shitbucket", shitbucketImportHandler).Methods("POST", "GET").Name("shitbucket-import")
+	router.Handle("/", errorHandler(urlIndexHandler)).Name("url-index")
+	router.Handle("/url/new", errorHandler(urlNewHandler)).Name("url-new")
+	router.Handle("/url/submit", errorHandler(urlSubmitHandler)).Methods("POST").Name("url-submit")
+	router.Handle("/url/{id:[0-9]+}", errorHandler(urlViewHandler)).Name("url-view")
+	router.Handle("/url/{id:[0-9]+}/edit", errorHandler(urlEditHandler)).Name("url-edit")
+	router.Handle("/url/{id:[0-9]+}/save", errorHandler(urlSaveHandler)).Methods("POST").Name("url-save")
+	router.Handle("/url/{id:[0-9]+}/delete", errorHandler(urlDeleteHandler)).Name("url-delete")
+	router.Handle("/tag", errorHandler(tagIndexHandler)).Name("tag-index")
+	router.Handle("/tag/{id:[0-9]+}", errorHandler(tagViewHandler)).Name("tag-view")
+	router.Handle("/import/shitbucket", errorHandler(shitbucketImportHandler)).Methods("POST", "GET").Name("shitbucket-import")
 	router.PathPrefix("/").Handler(staticHandler)
 
 	database = db.New(config.DatabaseFile)
@@ -65,7 +75,7 @@ func reverse(name string, params ...interface{}) string {
 	}
 	url, err := router.GetRoute(name).URL(s...)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	return url.Path
 }

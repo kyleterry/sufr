@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const Version = "1.0.0"
+
 const (
 	DatabaseName   = "sufr.db"
 	BucketNameRoot = "sufr"
