@@ -6,12 +6,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/db"
 )
 
 var (
 	router   = mux.NewRouter()
+	store    = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 	database *db.SufrDB
 )
 

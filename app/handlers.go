@@ -30,20 +30,35 @@ func (s *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) {
+	flashes := make(map[string][]interface{})
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	flashes["danger"] = session.Flashes("error")
+	session.Save(r, w)
 	renderTemplate(w, "url-new", map[string]interface{}{
 		"ActiveTab": "urls",
+		"Flashes":   flashes,
 	})
 }
 
 func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
-	// validate URL here
-	fmt.Println(govalidator.IsURL(urlstring))
 	if !govalidator.IsURL(urlstring) {
-		// flash add error
-		// redirect back to url-new
+		session, err := store.Get(r, "flashes")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		session.AddFlash(fmt.Sprintf("URL \"%s\" is not valid", urlstring), "error")
+		session.Save(r, w)
+		http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
+		return
 	}
+
 	title, err := getPageTitle(urlstring)
 	if err != nil {
 		// Add flash about title not being fetchable
@@ -61,6 +76,7 @@ func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	err = url.SaveWithTags(tagsstring)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error saving URL: %s", err), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
