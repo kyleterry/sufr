@@ -15,7 +15,7 @@ var staticHandler = http.StripPrefix(
 	"/static/",
 	http.FileServer(http.Dir("static")))
 
-func (s *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) {
+func urlIndexHandler(w http.ResponseWriter, r *http.Request) {
 	rawbytes, err := database.GetAll(config.BucketNameURL)
 	urls := DeserializeURLs(rawbytes...)
 	if err != nil {
@@ -29,7 +29,7 @@ func (s *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) {
+func urlNewHandler(w http.ResponseWriter, r *http.Request) {
 	flashes := make(map[string][]interface{})
 	session, err := store.Get(r, "flashes")
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
+func urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
 	if !govalidator.IsURL(urlstring) {
@@ -82,7 +82,7 @@ func (s *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
 }
 
-func (s *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) {
+func urlViewHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Sufr) urlEditHandler(w http.ResponseWriter, r *http.Request) {
+func urlEditHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *Sufr) urlEditHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) {
+func urlSaveHandler(w http.ResponseWriter, r *http.Request) {
 	titlestring := r.FormValue("title")
 	tagsstring := r.FormValue("tags")
 	vars := mux.Vars(r)
@@ -146,7 +146,7 @@ func (s *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
 }
 
-func (s *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) {
+func urlDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
@@ -167,7 +167,7 @@ func (s *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 }
 
-func (s *Sufr) tagIndexHandler(w http.ResponseWriter, r *http.Request) {
+func tagIndexHandler(w http.ResponseWriter, r *http.Request) {
 	rawbytes, err := database.GetAll(config.BucketNameTag)
 	tags := DeserializeTags(rawbytes...)
 	if err != nil {
@@ -179,7 +179,7 @@ func (s *Sufr) tagIndexHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) {
+func tagViewHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {

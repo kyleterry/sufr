@@ -30,23 +30,26 @@ type Sufr struct {
 func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
-	router.HandleFunc("/", app.urlIndexHandler).Name("url-index")
-	router.HandleFunc("/url/new", app.urlNewHandler).Name("url-new")
-	router.HandleFunc("/url/submit", app.urlSubmitHandler).Methods("POST").Name("url-submit")
-	router.HandleFunc("/url/{id:[0-9]+}", app.urlViewHandler).Name("url-view")
-	router.HandleFunc("/url/{id:[0-9]+}/edit", app.urlEditHandler).Name("url-edit")
-	router.HandleFunc("/url/{id:[0-9]+}/save", app.urlSaveHandler).Methods("POST").Name("url-save")
-	router.HandleFunc("/url/{id:[0-9]+}/delete", app.urlDeleteHandler).Name("url-delete")
-	router.HandleFunc("/tag", app.tagIndexHandler).Name("tag-index")
-	router.HandleFunc("/tag/{id:[0-9]+}", app.tagViewHandler).Name("tag-view")
-	router.HandleFunc("/import/shitbucket", app.shitbucketImportHandler).Methods("POST", "GET").Name("shitbucket-import")
+
+	router.HandleFunc("/", urlIndexHandler).Name("url-index")
+	router.HandleFunc("/url/new", urlNewHandler).Name("url-new")
+	router.HandleFunc("/url/submit", urlSubmitHandler).Methods("POST").Name("url-submit")
+	router.HandleFunc("/url/{id:[0-9]+}", urlViewHandler).Name("url-view")
+	router.HandleFunc("/url/{id:[0-9]+}/edit", urlEditHandler).Name("url-edit")
+	router.HandleFunc("/url/{id:[0-9]+}/save", urlSaveHandler).Methods("POST").Name("url-save")
+	router.HandleFunc("/url/{id:[0-9]+}/delete", urlDeleteHandler).Name("url-delete")
+	router.HandleFunc("/tag", tagIndexHandler).Name("tag-index")
+	router.HandleFunc("/tag/{id:[0-9]+}", tagViewHandler).Name("tag-view")
+	router.HandleFunc("/import/shitbucket", shitbucketImportHandler).Methods("POST", "GET").Name("shitbucket-import")
 	router.PathPrefix("/").Handler(staticHandler)
+
 	database = db.New(config.DatabaseFile)
 	err := database.Open()
 	// Panic if we can't open the database
 	if err != nil {
 		log.Panic(err)
 	}
+
 	return app
 }
 
