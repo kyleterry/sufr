@@ -59,6 +59,11 @@ func (sdb *SufrDB) Open() error {
 		if err != nil {
 			return err
 		}
+
+		_, err = b.CreateBucketIfNotExists([]byte(config.BucketNameUser))
+		if err != nil {
+			return err
+		}
 		return nil
 	})
 
@@ -77,8 +82,10 @@ func (sdb *SufrDB) Close() {
 // Put will create or update a SufrItem
 func (sdb *SufrDB) Put(item SufrItem) error {
 	err := sdb.database.Update(func(tx *bolt.Tx) error {
-		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
-		b := rootBucket.Bucket([]byte(item.Type()))
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if item.Type() != config.BucketNameRoot {
+			b = b.Bucket([]byte(item.Type()))
+		}
 		id := item.GetID()
 		if id == 0 {
 			id, _ = b.NextSequence()
@@ -98,8 +105,10 @@ func (sdb *SufrDB) Put(item SufrItem) error {
 func (sdb *SufrDB) Get(id uint64, bucket string) ([]byte, error) {
 	var item []byte
 	err := sdb.database.View(func(tx *bolt.Tx) error {
-		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
-		b := rootBucket.Bucket([]byte(bucket))
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
 		item = b.Get(itob(id))
 		return nil
 	})
@@ -111,8 +120,10 @@ func (sdb *SufrDB) Get(id uint64, bucket string) ([]byte, error) {
 func (sdb *SufrDB) GetAll(bucket string) ([][]byte, error) {
 	items := [][]byte{}
 	err := sdb.database.View(func(tx *bolt.Tx) error {
-		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
-		b := rootBucket.Bucket([]byte(bucket))
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
 		b.ForEach(func(_, v []byte) error {
 			items = append(items, v)
 			return nil
@@ -126,8 +137,10 @@ func (sdb *SufrDB) GetAll(bucket string) ([][]byte, error) {
 // Delete will return raw bytes for an item at `id` or return an error
 func (sdb *SufrDB) Delete(id uint64, bucket string) error {
 	err := sdb.database.Update(func(tx *bolt.Tx) error {
-		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
-		b := rootBucket.Bucket([]byte(bucket))
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
 		return b.Delete(itob(id))
 	})
 	return err
@@ -139,8 +152,10 @@ func (sdb *SufrDB) Delete(id uint64, bucket string) error {
 func (sdb *SufrDB) GetValuesByField(fieldname, bucket string, values ...string) ([][]byte, []string, error) {
 	items := [][]byte{}
 	err := sdb.database.Update(func(tx *bolt.Tx) error {
-		rootBucket := tx.Bucket([]byte(config.BucketNameRoot))
-		b := rootBucket.Bucket([]byte(bucket))
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
 		err := b.ForEach(func(k []byte, v []byte) error {
 			j := make(map[string]interface{})
 			if err := json.Unmarshal(v, &j); err != nil {

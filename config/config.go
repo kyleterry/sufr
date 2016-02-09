@@ -17,6 +17,7 @@ const (
 	DatabaseName   = "sufr.db"
 	BucketNameRoot = "sufr"
 	BucketNameURL  = "url"
+	BucketNameUser = "user"
 	BucketNameTag  = "tag"
 )
 

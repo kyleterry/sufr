@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/justinas/alice"
 	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/db"
 )
@@ -20,6 +21,11 @@ var (
 	router   = mux.NewRouter()
 	store    = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 	database *db.SufrDB
+)
+
+const (
+	VisibilityPrivate = "private"
+	VisibilityPublic  = "public"
 )
 
 type templatecontext int
@@ -46,16 +52,25 @@ func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
-	router.Handle("/", errorHandler(urlIndexHandler)).Name("url-index")
-	router.Handle("/url/new", errorHandler(urlNewHandler)).Name("url-new")
-	router.Handle("/url/submit", errorHandler(urlSubmitHandler)).Methods("POST").Name("url-submit")
-	router.Handle("/url/{id:[0-9]+}", errorHandler(urlViewHandler)).Name("url-view")
-	router.Handle("/url/{id:[0-9]+}/edit", errorHandler(urlEditHandler)).Name("url-edit")
-	router.Handle("/url/{id:[0-9]+}/save", errorHandler(urlSaveHandler)).Methods("POST").Name("url-save")
-	router.Handle("/url/{id:[0-9]+}/delete", errorHandler(urlDeleteHandler)).Name("url-delete")
-	router.Handle("/tag", errorHandler(tagIndexHandler)).Name("tag-index")
-	router.Handle("/tag/{id:[0-9]+}", errorHandler(tagViewHandler)).Name("tag-view")
-	router.Handle("/import/shitbucket", errorHandler(shitbucketImportHandler)).Methods("POST", "GET").Name("shitbucket-import")
+	// This route is used to initially configure the instance
+	router.Handle("/config", errorHandler(registrationHandler)).Methods("POST", "GET").Name("config")
+	router.Handle("/login", errorHandler(loginHandler)).Methods("POST", "GET").Name("login")
+	router.Handle("/logout", errorHandler(logoutHandler)).Methods("POST", "GET").Name("logout")
+
+	all := alice.New(SetLoggedInHandler, SetActiveTabHandler)
+	auth := alice.New(AuthHandler)
+	auth = auth.Extend(all)
+
+	router.Handle("/", all.Then(errorHandler(urlIndexHandler))).Name("url-index")
+	router.Handle("/url/new", auth.Then(errorHandler(urlNewHandler))).Name("url-new")
+	router.Handle("/url/submit", auth.Then(errorHandler(urlSubmitHandler))).Methods("POST").Name("url-submit")
+	router.Handle("/url/{id:[0-9]+}", all.Then(errorHandler(urlViewHandler))).Name("url-view")
+	router.Handle("/url/{id:[0-9]+}/edit", auth.Then(errorHandler(urlEditHandler))).Name("url-edit")
+	router.Handle("/url/{id:[0-9]+}/save", auth.Then(errorHandler(urlSaveHandler))).Methods("POST").Name("url-save")
+	router.Handle("/url/{id:[0-9]+}/delete", auth.Then(errorHandler(urlDeleteHandler))).Name("url-delete")
+	router.Handle("/tag", all.Then(errorHandler(tagIndexHandler))).Name("tag-index")
+	router.Handle("/tag/{id:[0-9]+}", all.Then(errorHandler(tagViewHandler))).Name("tag-view")
+	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
 	router.PathPrefix("/").Handler(staticHandler)
 
 	database = db.New(config.DatabaseFile)
@@ -69,7 +84,21 @@ func New() *Sufr {
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	cxt := make(map[string]interface{})
+	// Have we configured?
+	if r.RequestURI != "/config" &&
+		!strings.HasPrefix(r.RequestURI, "/static") &&
+		!applicationConfigured() {
+		http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
+		return
+	}
+
+	// Is it a private only instance?
+	if r.RequestURI != "/login" && instancePrivate() && !loggedIn(r) {
+		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
+		return
+	}
+
+	ctx := make(map[string]interface{})
 	flashes := make(map[string][]interface{})
 	session, err := store.Get(r, "flashes")
 	if err != nil {
@@ -78,10 +107,10 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	flashes["danger"] = session.Flashes("danger")
 	flashes["success"] = session.Flashes("success")
 	flashes["warning"] = session.Flashes("warning")
-	cxt["Flashes"] = flashes
+	ctx["Flashes"] = flashes
 	session.Save(r, w)
 
-	context.Set(r, TemplateContext, cxt)
+	context.Set(r, TemplateContext, ctx)
 
 	router.ServeHTTP(w, r)
 }
@@ -122,4 +151,52 @@ func parseTagsMap(tagsstring string) map[string]struct{} {
 
 func ui64toa(v uint64) string {
 	return strconv.FormatUint(v, 10)
+}
+
+func applicationConfigured() bool {
+	settings, err := database.Get(uint64(1), config.BucketNameRoot)
+	if err != nil {
+		panic(err)
+	}
+	if settings != nil {
+		return true
+	}
+	return false
+}
+
+func instancePrivate() bool {
+	settingsbytes, err := database.Get(uint64(1), config.BucketNameRoot)
+	if err != nil {
+		panic(err)
+	}
+	settings := DeserializeSettings(settingsbytes)
+	if settings.Visibility == VisibilityPrivate {
+		return true
+	}
+	return false
+}
+
+func loggedIn(r *http.Request) bool {
+	session, err := store.Get(r, "auth")
+	if err != nil {
+		panic(err)
+	}
+
+	val := session.Values["userID"]
+	userID, ok := val.(uint64)
+
+	if !ok || userID <= 0 {
+		return false
+	}
+
+	user, err := database.Get(userID, config.BucketNameUser)
+	if err != nil {
+		panic(err)
+	}
+
+	if user == nil {
+		return false
+	}
+
+	return true
 }

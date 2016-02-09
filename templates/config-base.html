@@ -1,0 +1,60 @@
+{{ define "flash" }}
+  {{ range $key, $values := .Flashes }}
+  {{ range $message := $values }}
+    <div class="alert alert-{{ $key }}">
+      <button class="close" data-dismiss="alert">×</button>
+      {{ $message }}
+    </div>
+  {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ define "title" }} Configuration{{ end }}
+
+{{ define "base" }}
+<!doctype html>
+<html>
+  <head>
+    <title>SUFR {{ template "title" . }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css">
+    <link type="text/css" rel="stylesheet" href="/static/css/app.css">
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css">
+  </head>
+  <body>
+    <!-- Fixed navbar -->
+    <div id="top" class="config-nav navbar navbar-default">
+      <div class="container test-centered">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{{ reverse "url-index" }}">SUFR</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" id="content">
+      <div class="col-xs-12">
+        {{ template "flash" . }}
+        {{ template "content" . }}
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted text-center">
+        © Kyle Terry
+        ·
+        <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a>
+        ·
+        <a href="https://github.com/kyleterry/sufr/issues">Issues</a>
+        ·
+        <a href="#top">Back to top</a>
+        </p>
+      </div>
+    </footer>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/app.js"></script>
+  </body>
+</html>
+{{ end }}

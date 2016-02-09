@@ -1,29 +1,23 @@
 {{ define "content" }}
-{{ $url := .Url }}
+{{ $url := .URL }}
 <div class="row">
-  <div class="page-header">
-    <h2 class="always-wrap">Managing Tags for {{ $url.URL }}</h2>
-  </div>
-
-  <div class="row">
-    <div class="col-xs-12">
-      <form class="form-horizontal" action="{{ reverse "url-save" "id" $url.ID }}" method="POST">
-        <div class="form-group">
-          <label for="title" class="col-xs-1 control-label">Title</label>
-          <div class="col-xs-11">
-            <input id="title" class="form-control" type="text" name="title" value="{{$url.Title}}" placeholder="Example URL Title">
-          </div>
+  <div class="col-xs-12">
+    <form class="form-horizontal" action="{{ reverse "url-save" "id" $url.ID }}" method="POST">
+      <div class="form-group">
+        <label for="title" class="col-xs-1 control-label">Title</label>
+        <div class="col-xs-11">
+          <input id="title" class="form-control" type="text" name="title" value="{{$url.Title}}" placeholder="Example URL Title">
         </div>
-        <div class="form-group">
-          <label for="tags" class="col-xs-1 control-label">Tags</label>
-          <div class="col-xs-11">
-            <input id="tags" class="form-control" type="text" name="tags" value="{{ $url.GetTagsForDisplay }}" placeholder="computer-science lisp compilers" autocapitalize="none">
-          </div>
-          <span id="helpBlock" class="col-xs-11 col-xs-offset-1 help-block">Tags must be separated by a space</span>
+      </div>
+      <div class="form-group">
+        <label for="tags" class="col-xs-1 control-label">Tags</label>
+        <div class="col-xs-11">
+          <input id="tags" class="form-control" type="text" name="tags" value="{{ $url.GetTagsForDisplay }}" placeholder="computer-science lisp compilers" autocapitalize="none">
         </div>
-        <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
-      </form>
-    </div>
+        <span id="helpBlock" class="col-xs-11 col-xs-offset-1 help-block">Tags must be separated by a space</span>
+      </div>
+      <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
+    </form>
   </div>
 </div>
 {{ end }}

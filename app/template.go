@@ -13,6 +13,8 @@ var templateMap = map[string]*template.Template{
 	"url-edit":          createTemplate("templates/base.html", "templates/url-edit.html"),
 	"tag-index":         createTemplate("templates/base.html", "templates/tag-index.html"),
 	"shitbucket-import": createTemplate("templates/base.html", "templates/shitbucket-import.html"),
+	"registration":      createTemplate("templates/config-base.html", "templates/register.html"),
+	"login":             createTemplate("templates/config-base.html", "templates/login.html"),
 }
 
 var templateFuncs = template.FuncMap{

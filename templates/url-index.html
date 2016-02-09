@@ -1,19 +1,14 @@
 {{ define "content" }}
 <div class="row">
-  <div class="page-header">
-    <h2>{{ .Title }}</h2>
-  </div>
-  <div class="row">
-    <div class="col-lg-12">
-      {{if .Count}}
-      <p>Found {{ .Count }} URLs</p>
-      {{range $url := .URLs }}
+  <div class="col-xs-12">
+    {{if .Count}}
+    <p class="text-muted">There are {{ .Count }}&hellip;</p>
+    {{range $url := .URLs }}
       {{ template "url-partial" $url }}
-      {{ end }}
-      {{else}}
-      <p>There is nothing here but silence.</p>
-      {{ end }}
-    </div>
+    {{ end }}
+    {{else}}
+    <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="#">settings</a>.</p>
+    {{ end }}
   </div>
 </div>
 {{ end }}

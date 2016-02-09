@@ -48,6 +48,18 @@ body > .container {
 -------------------------------------------------- */
 /* Not required for template or sticky footer method. */
 
+.navbar-default {
+  background-color: #FFF;
+  border-color: #FFF;
+}
+
+.config-nav .navbar-header {
+    float: left;
+    padding: 15px;
+    text-align: center;
+    width: 100%;
+}
+.config-nav .navbar-header .navbar-brand {float:none;}
 
 code {
   font-size: 80%;

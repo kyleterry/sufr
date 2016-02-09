@@ -4,9 +4,9 @@
   <div class="col-lg-12">
     <div class="url-container">
 
-      <h3>
+      <h4>
         <a href="{{ $url.URL }}" target="_blank">{{ $url.Title }}</a>
-      </h3>
+      </h4>
 
       <p class="text-muted"><small><a href="{{ reverse "url-view" "id" $url.ID }}">{{ $url.FormattedCreatedAt }}</a> - {{ $url.URL }}</small></p>
 
@@ -69,7 +69,6 @@
     <link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css">
     <link type="text/css" rel="stylesheet" href="/static/css/app.css">
     <link rel="stylesheet" href="/static/css/font-awesome.min.css">
-    <!--<link type="text/css" rel="stylesheet" href="/static/css/main.css" />-->
   </head>
   <body>
     <!-- Fixed navbar -->
@@ -89,18 +88,34 @@
             <!--
             <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
             no dashboard yet -->
-            <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-navicon"></i></a></li>
-            <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i></a></li>
-            <li {{if eq $active "imports"}}class="active"{{end}}><a href="{{ reverse "shitbucket-import" }}"><i class="fa fa-cloud-download"></i></a></li>
+            <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li>
+            <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i> Tags</a></li>
+            {{ if .LoggedIn }}
+            <li {{if eq $active "imports"}}class="active"{{end}}><a href="{{ reverse "shitbucket-import" }}"><i class="fa fa-cloud-download"></i> Import</a></li>
+            {{ end }}
           </ul>
           <ul class="nav navbar-nav navbar-right">
+            {{ if .LoggedIn }}
             <li><a href="{{ reverse "url-new" }}"><i class="fa fa-plus"></i> Add URL</a></li>
+            <li><a href="{{ reverse "logout" }}">Logout</a></li>
+            {{ end }}
+            {{ if not .LoggedIn }}
+            <li><a href="{{ reverse "login" }}">Login</a></li>
+            {{ end }}
           </ul>
         </div><!--/.nav-collapse -->
       </div>
     </div>
 
     <div class="container" id="content">
+
+      {{ if .Title }}
+      <div class="row">
+        <div class="page-header">
+          <h4>{{.Title}}</h4>
+        </div>
+      </div>
+      {{ end }}
       <div class="col-xs-12">
         {{ template "flash" . }}
         {{ template "content" . }}
@@ -123,7 +138,9 @@
     {{ template "modal" . }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
+    {{ if .LoggedIn }}
     <script src="/static/js/app.js"></script>
+    {{ end }}
   </body>
 </html>
 {{ end }}

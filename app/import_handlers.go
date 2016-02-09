@@ -1,10 +1,15 @@
 package app
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/gorilla/context"
+)
 
 func shitbucketImportHandler(w http.ResponseWriter, r *http.Request) error {
-	renderTemplate(w, "shitbucket-import", map[string]interface{}{
-		"ActiveTab": "imports",
-	})
+	ctx := context.Get(r, TemplateContext).(map[string]interface{})
+	ctx["Title"] = "Import"
+
+	renderTemplate(w, "shitbucket-import", ctx)
 	return nil
 }

@@ -1,39 +1,47 @@
 package app
 
 import (
-	"log"
 	"net/http"
+	"strings"
+
+	"github.com/gorilla/context"
 )
 
-type MiddlewareHandler func(http.Handler) http.Handler
-
-type MiddlewareChain struct {
-	Handlers []MiddlewareHandler
-}
-
-func NewMiddlewareChain(handlers ...MiddlewareHandler) MiddlewareChain {
-	chain := MiddlewareChain{}
-	chain.Handlers = append(chain.Handlers, handlers...)
-	return chain
-}
-
-func (mc MiddlewareChain) SetHandler(h http.Handler) http.Handler {
-	//Since it's a stack we need to go --
-	for i := len(mc.Handlers) - 1; i >= 0; i-- {
-		h = mc.Handlers[i](h)
-	}
-
-	return h
-}
-
-func (mc MiddlewareChain) SetHandlerFunc(fn http.HandlerFunc) http.Handler {
-	return mc.SetHandler(http.HandlerFunc(fn))
-}
-
-func AuthMiddleware(h http.Handler) http.Handler {
+func AuthHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("entering m1")
+		if !loggedIn(r) {
+			http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
+			return
+		}
 		h.ServeHTTP(w, r)
-		log.Println("exiting m1")
+	})
+}
+
+func SetLoggedInHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Get(r, TemplateContext).(map[string]interface{})
+		ctx["LoggedIn"] = loggedIn(r)
+		context.Set(r, TemplateContext, ctx)
+		h.ServeHTTP(w, r)
+	})
+}
+
+func SetActiveTabHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Get(r, TemplateContext).(map[string]interface{})
+		prefix := ""
+		switch {
+		case strings.HasPrefix(r.RequestURI, "/url"):
+			prefix = "urls"
+		case strings.HasPrefix(r.RequestURI, "/tag"):
+			prefix = "tags"
+		case strings.HasPrefix(r.RequestURI, "/import"):
+			prefix = "imports"
+		case strings.HasPrefix(r.RequestURI, "/"):
+			prefix = "urls" // hack for now
+		}
+		ctx["ActiveTab"] = prefix
+		context.Set(r, TemplateContext, ctx)
+		h.ServeHTTP(w, r)
 	})
 }

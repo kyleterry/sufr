@@ -35,6 +35,58 @@ func (i *itemSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type Settings struct {
+	ID          uint64    `json:"id"`
+	Visibility  string    `json:"visibility"`
+	EmbedPhotos bool      `json:"embed_photos"`
+	EmbedVideos bool      `json:"embed_videos"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// DeserializeURL will convert raw bytes of JSON into a URL struct pointer
+// Returns a *URL
+func DeserializeSettings(b []byte) *Settings {
+	settings := &Settings{}
+	if err := json.Unmarshal(b, settings); err != nil {
+		return nil
+	}
+	return settings
+}
+
+// Save saves the URL to the database
+func (s *Settings) Save() error {
+	if s.ID <= 0 {
+		s.CreatedAt = time.Now()
+	}
+	s.UpdatedAt = time.Now()
+	err := database.Put(s)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Type returns object type (such as bucket name)
+func (s *Settings) Type() string {
+	return config.BucketNameRoot
+}
+
+// Serialize returns a json []byte slice of the struct
+func (s *Settings) Serialize() ([]byte, error) {
+	return json.Marshal(s)
+}
+
+// GetID returns a uint64 id of the record
+func (s *Settings) GetID() uint64 {
+	return s.ID
+}
+
+// SetID sets a uint64 id of the record
+func (s *Settings) SetID(id uint64) {
+	s.ID = id
+}
+
 // URL is the model for a url object
 type URL struct {
 	ID        uint64    `json:"id"`
@@ -150,6 +202,10 @@ func (u *URL) GetTagsForDisplay() string {
 
 // Save saves the URL to the database
 func (u *URL) Save() error {
+	if u.ID <= 0 {
+		u.CreatedAt = time.Now()
+	}
+	u.UpdatedAt = time.Now()
 	err := database.Put(u)
 	if err != nil {
 		return err
@@ -198,9 +254,11 @@ func (u *URL) Delete() error {
 
 // Tag holds the little information we have about url tags
 type Tag struct {
-	ID        uint64  `json:"id"`
-	Name      string  `json:"name"`
-	URLs      itemSet `json:"urls"`
+	ID        uint64    `json:"id"`
+	Name      string    `json:"name"`
+	URLs      itemSet   `json:"urls"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 	urlvalues []*URL
 }
 
@@ -265,6 +323,10 @@ func (t *Tag) URLCount() int {
 
 // Save saves the URL to the database
 func (t *Tag) Save() error {
+	if t.ID <= 0 {
+		t.CreatedAt = time.Now()
+	}
+	t.UpdatedAt = time.Now()
 	err := database.Put(t)
 	if err != nil {
 		return err
@@ -290,4 +352,55 @@ func DeserializeTags(b ...[]byte) []*Tag {
 		tags = append(tags, DeserializeTag(rb))
 	}
 	return tags
+}
+
+type User struct {
+	ID        uint64    `json:"id"`
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// DeserializeURL will convert raw bytes of JSON into a URL struct pointer
+// Returns a *URL
+func DeserializeUser(b []byte) *User {
+	user := &User{}
+	if err := json.Unmarshal(b, user); err != nil {
+		return nil
+	}
+	return user
+}
+
+// Save saves the URL to the database
+func (u *User) Save() error {
+	if u.ID <= 0 {
+		u.CreatedAt = time.Now()
+	}
+	u.UpdatedAt = time.Now()
+	err := database.Put(u)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Type returns object type (such as bucket name)
+func (u *User) Type() string {
+	return config.BucketNameUser
+}
+
+// Serialize returns a json []byte slice of the struct
+func (u *User) Serialize() ([]byte, error) {
+	return json.Marshal(u)
+}
+
+// GetID returns a uint64 id of the record
+func (u *User) GetID() uint64 {
+	return u.ID
+}
+
+// SetID sets a uint64 id of the record
+func (u *User) SetID(id uint64) {
+	u.ID = id
 }

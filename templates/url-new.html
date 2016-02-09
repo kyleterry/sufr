@@ -1,30 +1,26 @@
 {{ define "content" }}
 <div class="row">
-  <div class="page-header">
-    <h2>Adding a URL</h2>
-  </div>
-
-  <div class="row">
-    <div class="col-xs-12">
-      <form class="form-horizontal" action="{{ reverse "url-submit" }}" method="POST">
-        <div class="form-group">
-          <label for="url" class="col-xs-1 control-label">URL</label>
-          <div class="col-xs-11">
-            <input class="form-control" id="url-submit" type="text" name="url" placeholder="https://example.com" autocapitalize="none">
-          </div>
+  <div class="col-xs-12">
+    <form class="form-horizontal" action="{{ reverse "url-submit" }}" method="POST">
+      <div class="form-group">
+        <label for="url" class="col-md-1 col-xs-11 control-label">URL</label>
+        <div class="col-md-11 col-xs-12">
+          <input class="form-control" id="url-submit" type="text" name="url" placeholder="https://example.com" autocapitalize="none">
         </div>
-        <div class="form-group">
-          <label for="tags" class="col-xs-1 control-label">Tags</label>
-          <div class="col-xs-11">
-            <input id="tags" class="form-control" type="text" name="tags" placeholder="computer-science lisp compilers" autocapitalize="none">
-          </div>
-          <span id="helpBlock" class="col-xs-11 col-xs-offset-1 help-block">Tags must be separated by a space</span>
+      </div>
+      <div class="form-group">
+        <label for="tags" class="col-md-1 col-xs-11 control-label">Tags</label>
+        <div class="col-md-11 col-xs-12">
+          <input id="tags" class="form-control" type="text" name="tags" placeholder="computer-science lisp compilers" autocapitalize="none">
         </div>
-        <div class="col-xs-11 col-xs-offset-1">
+        <span id="helpBlock" class="col-xs-12 col-md-offset-1 help-block">Tags must be separated by a space</span>
+      </div>
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-offset-1 col-lg-offset-1">
           <button type="submit" class="btn btn-default">You're shitting me</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 </div>
 {{ end }}

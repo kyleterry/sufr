@@ -1,5 +1,5 @@
-hash: 0b165bd622a11df43a783c3621ef9cd38e33e8f2c6c4dc4b0ce8d8892b905b24
-updated: 2016-02-06T22:23:10.650780968-08:00
+hash: 563a938a1da596459b6b719765953a1a863b8dda62180fe57add8b1f650288b2
+updated: 2016-02-08T21:10:17.726405296-08:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
@@ -11,6 +11,10 @@ imports:
   version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
 - name: github.com/gorilla/mux
   version: 26a6070f849969ba72b72256e9f14cf519751690
+- name: github.com/gorilla/schema
+  version: 14c555599c2a4f493c1e13fd1ea6fdf721739028
+- name: github.com/justinas/alice
+  version: 2ac31ddd090e634eeabd598d1066a9a3e4a58a9f
 - name: github.com/PuerkitoBio/goquery
   version: 81e6517758f0c0952bb05e728108cb7e19727097
 - name: golang.org/x/crypto
@@ -18,5 +22,5 @@ imports:
 - name: golang.org/x/net
   version: 7f88271ea9913b72aca44fa7fc8af919eacc17ce
 - name: golang.org/x/text
-  version: 6b2a19a9a1a1b404186b838a6b9d0c15bc9cc160
+  version: 2ea5e055772cf5daa0b1478d6e88c8d0c3d4cb79
 devImports: []

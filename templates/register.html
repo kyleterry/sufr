@@ -1,0 +1,65 @@
+{{ define "content" }}
+  <div class="row">
+    <div class="col-xs-12">
+      <p class="alert alert-info lead">This looks like a new instance of SUFR. Please register your admin user and configure the application below.</p>
+      <form class="form-horizontal" action="{{ reverse "config" }}" method="POST">
+        <fieldset>
+          <div class="form-group">
+            <label for="email" class="col-xs-12 col-md-2 control-label">Email</label>
+            <div class="col-xs-12 col-md-10">
+              <input class="form-control" id="email" type="email" name="email" placeholder="kyle@example.com" autocapitalize="none">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="col-xs-12 col-md-2 control-label">Password</label>
+            <div class="col-xs-12 col-md-10">
+              <input id="password" class="form-control" type="password" name="password">
+            </div>
+            <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">No stupid constraints, just use a good sentence you can remember.</span>
+          </div>
+          <div class="form-group">
+            <label class="col-xs-12 col-md-2 control-label">Visibility</label>
+            <div class="col-xs-12 col-md-10">
+              <div class="radio">
+                <label>
+                  <input id="visibility-public" type="radio" name="visibility" value="public" checked>
+                  Public
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input id="visibility-private" type="radio" name="visibility" value="private">
+                  Private
+                </label>
+              </div>
+              <span id="helpBlock" class="help-block">Enable private instances if you want to hide everything from the public.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-xs-12 col-md-2 control-label">Content Embedding</label>
+            <div class="col-xs-11 col-md-10">
+              <div class="checkbox">
+                <label>
+                  <input id="embedphotos" type="checkbox" name="embedphotos">
+                  Embed Photos
+                </label>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input id="embedvideos" type="checkbox" name="embedvideos">
+                  Embed Videos
+                </label>
+              </div>
+              <span id="helpBlock" class="help-block">Embedding content will allow pictures and videos to be visible in your SUFR feed.</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="col-xs-12 col-md-offset-2">
+              <button type="submit" class="btn btn-default">Configure</button>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+{{ end }}
