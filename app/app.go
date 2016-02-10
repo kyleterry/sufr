@@ -85,20 +85,6 @@ func New() *Sufr {
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Have we configured?
-	if r.RequestURI != "/config" &&
-		!strings.HasPrefix(r.RequestURI, "/static") &&
-		!applicationConfigured() {
-		http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
-		return
-	}
-
-	// Is it a private only instance?
-	if r.RequestURI != "/login" && instancePrivate() && !loggedIn(r) {
-		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
-		return
-	}
-
 	ctx := make(map[string]interface{})
 	flashes := make(map[string][]interface{})
 	session, err := store.Get(r, "flashes")
@@ -112,6 +98,23 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	session.Save(r, w)
 
 	context.Set(r, TemplateContext, ctx)
+
+	// Have we configured?
+	if !applicationConfigured() {
+		if r.RequestURI != "/config" &&
+			!strings.HasPrefix(r.RequestURI, "/static") {
+			http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
+			return
+		}
+		router.ServeHTTP(w, r)
+		return
+	}
+
+	// Is it a private only instance?
+	if r.RequestURI != "/login" && instancePrivate() && !loggedIn(r) && !strings.HasPrefix(r.RequestURI, "/static") {
+		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
+		return
+	}
 
 	router.ServeHTTP(w, r)
 }
