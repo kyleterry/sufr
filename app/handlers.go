@@ -374,3 +374,45 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	return nil
 }
+
+func settingsHandler(w http.ResponseWriter, r *http.Request) error {
+	ctx := context.Get(r, TemplateContext).(map[string]interface{})
+	ctx["Title"] = "Settings"
+	val, err := database.Get(uint64(1), config.BucketNameRoot)
+	if err != nil {
+		return err
+	}
+	settings := DeserializeSettings(val)
+	if r.Method == "GET" {
+		ctx["Settings"] = settings
+		return renderTemplate(w, "settings", ctx)
+	}
+
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	cschema := &ConfigSchema{}
+	decoder := schema.NewDecoder()
+
+	if err := decoder.Decode(cschema, r.PostForm); err != nil {
+		return err
+	}
+
+	settings.Visibility = cschema.Visibility
+	settings.EmbedPhotos = cschema.EmbedPhotos
+	settings.EmbedVideos = cschema.EmbedVideos
+
+	settings.Save()
+
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		return err
+	}
+
+	session.AddFlash("Settings have been saved", "success")
+	session.Save(r, w)
+
+	http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+	return nil
+}

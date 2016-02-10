@@ -45,14 +45,12 @@ func SetActiveTabHandler(h http.Handler) http.Handler {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
 		prefix := ""
 		switch {
-		case strings.HasPrefix(r.RequestURI, "/url"):
+		case strings.HasPrefix(r.RequestURI, "/url"), r.RequestURI == "/":
 			prefix = "urls"
 		case strings.HasPrefix(r.RequestURI, "/tag"):
 			prefix = "tags"
 		case strings.HasPrefix(r.RequestURI, "/import"):
 			prefix = "imports"
-		case strings.HasPrefix(r.RequestURI, "/"):
-			prefix = "urls" // hack for now
 		}
 		ctx["ActiveTab"] = prefix
 		context.Set(r, TemplateContext, ctx)

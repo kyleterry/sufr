@@ -90,14 +90,18 @@
             no dashboard yet -->
             <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li>
             <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i> Tags</a></li>
-            {{ if .LoggedIn }}
-            <li {{if eq $active "imports"}}class="active"{{end}}><a href="{{ reverse "shitbucket-import" }}"><i class="fa fa-cloud-download"></i> Import</a></li>
-            {{ end }}
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {{ if .LoggedIn }}
             <li><a href="{{ reverse "url-new" }}"><i class="fa fa-plus"></i> Add URL</a></li>
-            <li><a href="{{ reverse "logout" }}">Logout</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ .User.Email }} <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="{{ reverse "settings" }}">Settings</a></li>
+                <li role="separator" class="divider"></li>
+                <li><a href="{{ reverse "logout" }}">Logout</a></li>
+              </ul>
+            </li>
             {{ end }}
             {{ if not .LoggedIn }}
             <li><a href="{{ reverse "login" }}">Login</a></li>

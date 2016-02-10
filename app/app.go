@@ -71,6 +71,7 @@ func New() *Sufr {
 	router.Handle("/tag", all.Then(errorHandler(tagIndexHandler))).Name("tag-index")
 	router.Handle("/tag/{id:[0-9]+}", all.Then(errorHandler(tagViewHandler))).Name("tag-view")
 	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
+	router.Handle("/settings", auth.Then(errorHandler(settingsHandler))).Methods("POST", "GET").Name("settings")
 	router.PathPrefix("/").Handler(staticHandler)
 
 	database = db.New(config.DatabaseFile)
