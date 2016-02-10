@@ -113,14 +113,10 @@
 
     <div class="container" id="content">
 
-      {{ if .Title }}
-      <div class="row">
-        <div class="page-header">
-          <h4>{{.Title}}</h4>
-        </div>
-      </div>
-      {{ end }}
       <div class="col-xs-12">
+        {{ if .Title }}
+          <p class="lead text-muted">{{.Title}}</p>
+        {{ end }}
         {{ template "flash" . }}
         {{ template "content" . }}
       </div>

@@ -30,15 +30,13 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx["Count"] = len(urls)
 	ctx["URLs"] = urls
 
-	renderTemplate(w, "url-index", ctx)
-	return nil
+	return renderTemplate(w, "url-index", ctx)
 }
 
 func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Title"] = "Add a URL"
-	renderTemplate(w, "url-new", ctx)
-	return nil
+	return renderTemplate(w, "url-new", ctx)
 }
 
 func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
@@ -98,8 +96,7 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["URL"] = url
 
-	renderTemplate(w, "url-view", ctx)
-	return nil
+	return renderTemplate(w, "url-view", ctx)
 }
 
 func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
@@ -119,9 +116,7 @@ func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx["URL"] = url
 	ctx["Title"] = fmt.Sprintf("Editing %s", url.URL)
 
-	renderTemplate(w, "url-edit", ctx)
-
-	return nil
+	return renderTemplate(w, "url-edit", ctx)
 }
 
 func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
@@ -181,10 +176,8 @@ func tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Tags"] = tags
-	ctx["Title"] = "Tags"
 
-	renderTemplate(w, "tag-index", ctx)
-	return nil
+	return renderTemplate(w, "tag-index", ctx)
 }
 
 func tagViewHandler(w http.ResponseWriter, r *http.Request) error {
@@ -203,10 +196,9 @@ func tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["URLs"] = tag.GetURLs()
 	ctx["Count"] = len(tag.URLs)
-	ctx["Title"] = fmt.Sprintf("URLs tagged under %s", tag.Name)
+	ctx["Title"] = fmt.Sprintf("Tagged under %s", tag.Name)
 
-	renderTemplate(w, "url-index", ctx)
-	return nil
+	return renderTemplate(w, "url-index", ctx)
 }
 
 type ConfigSchema struct {
@@ -218,10 +210,14 @@ type ConfigSchema struct {
 }
 
 func registrationHandler(w http.ResponseWriter, r *http.Request) error {
+	if applicationConfigured() {
+		http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
+	}
+
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
+	ctx["Title"] = "Setup"
 	if r.Method == "GET" {
-		renderTemplate(w, "registration", ctx)
-		return nil
+		return renderTemplate(w, "registration", ctx)
 	}
 
 	session, err := store.Get(r, "flashes")
@@ -276,6 +272,10 @@ func registrationHandler(w http.ResponseWriter, r *http.Request) error {
 	user.Save()
 	settings.Save()
 
+	authsession, err := store.Get(r, "auth")
+	authsession.Values["userID"] = user.ID
+	authsession.Save(r, w)
+
 	// Otherwise things are good
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	return nil
@@ -288,9 +288,9 @@ type LoginSchema struct {
 
 func loginHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
+	ctx["Title"] = "Login"
 	if r.Method == "GET" {
-		renderTemplate(w, "login", ctx)
-		return nil
+		return renderTemplate(w, "login", ctx)
 	}
 
 	session, err := store.Get(r, "flashes")
@@ -326,7 +326,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) error {
 			session.AddFlash(msg, "danger")
 		}
 		session.Save(r, w)
-		http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
+		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 		return nil
 	}
 
@@ -346,7 +346,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) error {
 			session.AddFlash(msg, "danger")
 		}
 		session.Save(r, w)
-		http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
+		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 		return nil
 	}
 

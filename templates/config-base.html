@@ -9,7 +9,7 @@
   {{ end }}
 {{ end }}
 
-{{ define "title" }} Configuration{{ end }}
+{{ define "title" }}{{ if .Title }}{{ .Title }}{{ end }}{{ end }}
 
 {{ define "base" }}
 <!doctype html>
@@ -23,15 +23,6 @@
     <link rel="stylesheet" href="/static/css/font-awesome.min.css">
   </head>
   <body>
-    <!-- Fixed navbar -->
-    <div id="top" class="config-nav navbar navbar-default">
-      <div class="container test-centered">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="{{ reverse "url-index" }}">SUFR</a>
-        </div>
-      </div>
-    </div>
-
     <div class="container" id="content">
       <div class="col-xs-12">
         {{ template "flash" . }}
