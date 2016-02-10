@@ -7,7 +7,7 @@
       {{ template "url-partial" $url }}
     {{ end }}
     {{else}}
-    <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="#">settings</a>.</p>
+    <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="{{ reverse "settings" }}">settings</a>.</p>
     {{ end }}
   </div>
 </div>
