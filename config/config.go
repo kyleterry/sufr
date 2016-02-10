@@ -19,6 +19,7 @@ const (
 	BucketNameURL  = "url"
 	BucketNameUser = "user"
 	BucketNameTag  = "tag"
+	DBFileMode     = 0755
 )
 
 var (
@@ -45,6 +46,17 @@ func New() {
 	flag.StringVar(&StaticDir, "static-dir", defaultStaticDir, "Location where static assets are stored")
 
 	flag.Parse()
+
+	if _, err := os.Stat(DataDir); err != nil {
+		if os.IsNotExist(err) {
+			err := os.MkdirAll(DataDir, os.ModePerm)
+			if err != nil {
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+	}
 
 	DatabaseFile = path.Join(DataDir, DatabaseName)
 }

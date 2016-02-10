@@ -31,6 +31,10 @@ func renderTemplate(w http.ResponseWriter, name string, data interface{}) error 
 }
 
 func createTemplate(files ...string) *template.Template {
+	var filebytes = []byte{}
+	for _, f := range files {
+		filebytes = append(filebytes, MustAsset(f)...)
+	}
 	tmpl := template.New("*").Funcs(templateFuncs)
-	return template.Must(tmpl.ParseFiles(files...))
+	return template.Must(tmpl.Parse(string(filebytes)))
 }

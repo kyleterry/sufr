@@ -1,8 +1,10 @@
-hash: e345ee1fb4d0e8706aeee8b36e6bd90b58bb085559a7c6cc3b4f3e00d2765aad
-updated: 2016-02-09T14:06:17.345908791-08:00
+hash: a8a1421f5d10e1aa6e6faad64994bb6bb690beaa5190d7717554b120fcb2abaf
+updated: 2016-02-09T22:24:56.264183889-08:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
+- name: github.com/arschles/go-bindata-html-template
+  version: 4ae2add2b2f4e490b61ce4e7fdfa622824318375
 - name: github.com/asaskevich/govalidator
   version: 9699ab6b38bee2e02cd3fe8b99ecf67665395c96
 - name: github.com/boltdb/bolt
