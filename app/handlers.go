@@ -15,9 +15,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var staticHandler = http.StripPrefix(
-	"/static/",
-	http.FileServer(http.Dir("static")))
+//var staticHandler = http.StripPrefix(
+//	"/static/",
+//	http.FileServer(http.Dir("static")))
+
+var staticHandler = http.FileServer(FS(false))
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	rawbytes, err := database.GetAll(config.BucketNameURL)
