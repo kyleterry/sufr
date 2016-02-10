@@ -6,3 +6,4 @@ import:
 - package: github.com/asaskevich/govalidator
 - package: github.com/gorilla/schema
 - package: github.com/justinas/alice
+- package: github.com/gorilla/handlers

@@ -1,5 +1,5 @@
-hash: 563a938a1da596459b6b719765953a1a863b8dda62180fe57add8b1f650288b2
-updated: 2016-02-08T21:10:17.726405296-08:00
+hash: e345ee1fb4d0e8706aeee8b36e6bd90b58bb085559a7c6cc3b4f3e00d2765aad
+updated: 2016-02-09T14:06:17.345908791-08:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
@@ -9,6 +9,8 @@ imports:
   version: 2f846c3551b76d7710f159be840d66c3d064abbe
 - name: github.com/gorilla/context
   version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
+- name: github.com/gorilla/handlers
+  version: b3aff83722cb2ae031a70cae984650e3a16cd20e
 - name: github.com/gorilla/mux
   version: 26a6070f849969ba72b72256e9f14cf519751690
 - name: github.com/gorilla/schema
