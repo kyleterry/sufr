@@ -57,7 +57,7 @@ func New() *Sufr {
 	router.Handle("/login", errorHandler(loginHandler)).Methods("POST", "GET").Name("login")
 	router.Handle("/logout", errorHandler(logoutHandler)).Methods("POST", "GET").Name("logout")
 
-	all := alice.New(SetLoggedInHandler, SetActiveTabHandler)
+	all := alice.New(SetLoggedInHandler, SetActiveTabHandler, LoggingHandler)
 	auth := alice.New(AuthHandler)
 	auth = auth.Extend(all)
 
