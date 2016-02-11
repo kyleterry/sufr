@@ -57,3 +57,20 @@ func SetActiveTabHandler(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+
+func SetSettingsHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Get(r, TemplateContext).(map[string]interface{})
+		settingsbytes, err := database.Get(uint64(1), config.BucketNameRoot)
+		if err != nil {
+			panic(err)
+		}
+		settings := DeserializeSettings(settingsbytes)
+		settingsmap := make(map[string]interface{})
+		settingsmap["EmbedPhotos"] = settings.EmbedPhotos
+		settingsmap["EmbedVideos"] = settings.EmbedVideos
+		ctx["Settings"] = settingsmap
+		context.Set(r, TemplateContext, ctx)
+		h.ServeHTTP(w, r)
+	})
+}

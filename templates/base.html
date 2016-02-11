@@ -1,23 +1,30 @@
 {{ define "url-partial" }}
-{{ $url := . }}
 <div class="row">
   <div class="col-lg-12">
     <div class="url-container">
 
       <h4>
-        <a href="{{ $url.URL }}" target="_blank">{{ $url.Title }}</a>
+        <a href="{{ .URL.URL }}" target="_blank">{{ .URL.Title }}</a>
       </h4>
 
-      <p class="text-muted"><small><a href="{{ reverse "url-view" "id" $url.ID }}">{{ $url.FormattedCreatedAt }}</a> - {{ $url.URL }}</small></p>
+      <p class="text-muted"><small><a href="{{ reverse "url-view" "id" .URL.ID }}">{{ .URL.FormattedCreatedAt }}</a> &middot; {{ .URL.URL }} {{ if isyoutube .URL.URL }}&middot; <i class="fa fa-film"></i>{{ end }}</small></p>
 
-      {{ if $url.HasTags }}
-      <i class="fa fa-tag"></i> {{ range $tag := $url.GetTags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
+      {{ if .Settings.EmbedVideos }}
+      {{ if isyoutube .URL.URL }}
+      <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="//www.youtube.com/embed/{{ youtubevid .URL.URL }}" allowfullscreen></iframe>
+      </div>
+      {{ end }}
+      {{ end }}
+
+      {{ if .URL.HasTags }}
+      <i class="fa fa-tag"></i> {{ range $tag := .URL.GetTags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
       {{ end }}
 
       <div class="url-actions">
         <span class="hidden">
-          <a class="btn" href="{{ reverse "url-edit" "id" $url.ID }}">Edit</a>
-          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" $url.ID }}" data-toggle="modal" data-target="#confirm-delete">Delete</a>
+          <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}">Edit</a>
+          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete">Delete</a>
         </span>
       </div>
     </div>

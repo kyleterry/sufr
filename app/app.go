@@ -1,9 +1,11 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode"
@@ -57,7 +59,7 @@ func New() *Sufr {
 	router.Handle("/login", errorHandler(loginHandler)).Methods("POST", "GET").Name("login")
 	router.Handle("/logout", errorHandler(logoutHandler)).Methods("POST", "GET").Name("logout")
 
-	all := alice.New(SetLoggedInHandler, SetActiveTabHandler, LoggingHandler)
+	all := alice.New(SetSettingsHandler, SetLoggedInHandler, SetActiveTabHandler, LoggingHandler)
 	auth := alice.New(AuthHandler)
 	auth = auth.Extend(all)
 
@@ -203,4 +205,28 @@ func loggedIn(r *http.Request) bool {
 	}
 
 	return true
+}
+
+func isYoutube(url string) bool {
+	return strings.Contains(url, "youtube.com/watch")
+}
+
+func youtubevid(video string) string {
+	u, _ := url.Parse(video)
+	return u.Query()["v"][0]
+}
+
+func newcontext(values ...interface{}) (map[string]interface{}, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("invalid dict call")
+	}
+	dict := make(map[string]interface{}, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		dict[key] = values[i+1]
+	}
+	return dict, nil
 }

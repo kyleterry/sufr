@@ -19,7 +19,10 @@ var templateMap = map[string]*template.Template{
 }
 
 var templateFuncs = template.FuncMap{
-	"reverse": reverse,
+	"reverse":    reverse,
+	"isyoutube":  isYoutube,
+	"youtubevid": youtubevid,
+	"newcontext": newcontext,
 }
 
 func renderTemplate(w http.ResponseWriter, name string, data interface{}) error {

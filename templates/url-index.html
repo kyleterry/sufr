@@ -2,8 +2,9 @@
 <div class="row">
   <div class="col-xs-12">
     {{if .Count}}
+    {{ $settings := .Settings }}
     {{range $url := .URLs }}
-      {{ template "url-partial" $url }}
+      {{ template "url-partial" newcontext "URL" $url "Settings" $settings }}
     {{ end }}
     <div class="row">
       <div class="col-xs-12">
