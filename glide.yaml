@@ -8,3 +8,4 @@ import:
 - package: github.com/justinas/alice
 - package: github.com/gorilla/handlers
 - package: github.com/arschles/go-bindata-html-template
+- package: github.com/mjibson/esc
