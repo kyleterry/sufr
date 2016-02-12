@@ -24,7 +24,7 @@
       <div class="url-actions">
         <span class="hidden">
           <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}">Edit</a>
-          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete">Delete</a>
+          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
         </span>
       </div>
     </div>
@@ -40,9 +40,7 @@
         <span class="text-danger">Deleting URL</span>
       </div>
       <div class="modal-body">
-        <p>
-          Are you sure you want to delete this URL?
-        </p>
+        <p>Are you sure you want to delete this URL?</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -93,10 +91,10 @@
           <ul class="nav navbar-nav">
             {{ $active := .ActiveTab }}
             <!--
-            <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
-            no dashboard yet -->
-            <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li>
-            <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i> Tags</a></li>
+              <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
+              no dashboard yet -->
+              <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li>
+              <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i> Tags</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {{ if .LoggedIn }}
@@ -117,37 +115,30 @@
         </div><!--/.nav-collapse -->
       </div>
     </div>
-
     <div class="container" id="content">
-
       <div class="col-xs-12">
         {{ if .Title }}
-          <p class="lead text-muted always-wrap">{{.Title}}</p>
+        <p class="lead text-muted always-wrap">{{.Title}}</p>
         {{ end }}
         {{ template "flash" . }}
         {{ template "content" . }}
       </div>
     </div>
-
     <footer class="footer">
       <div class="container">
         <p class="text-muted">
-        © Kyle Terry
-        ·
-        <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a>
-        ·
-        <a href="https://github.com/kyleterry/sufr/issues">Issues</a>
-        ·
-        <a href="#top">Back to top</a>
+        © Kyle Terry · <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a> · <a href="https://github.com/kyleterry/sufr/issues">Issues</a> · <a href="#top">Back to top</a>
         </p>
       </div>
     </footer>
     {{ template "modal" . }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
-    {{ if .LoggedIn }}
-    <script src="/static/js/app.js"></script>
-    {{ end }}
+    {{ if .LoggedIn }}<script src="/static/js/app.js"></script>{{ end }}
+    <div class="device-xs visible-xs"></div>
+    <div class="device-sm visible-sm"></div>
+    <div class="device-md visible-md"></div>
+    <div class="device-lg visible-lg"></div>
   </body>
 </html>
 {{ end }}
