@@ -1,3 +1,4 @@
+{{ define "title" }}{{ .URL.Title }}{{ end }}
 {{ define "content" }}
 {{ template "url-partial" newcontext "URL" .URL "Settings" .Settings }}
 {{end}}

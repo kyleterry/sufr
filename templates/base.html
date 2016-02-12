@@ -54,23 +54,23 @@
 {{end}}
 
 {{ define "flash" }}
-  {{ range $key, $values := .Flashes }}
-  {{ range $message := $values }}
-    <div class="alert alert-{{ $key }}">
-      <button class="close" data-dismiss="alert">×</button>
-      {{ $message }}
-    </div>
-  {{ end }}
-  {{ end }}
+{{ range $key, $values := .Flashes }}
+{{ range $message := $values }}
+<div class="alert alert-{{ $key }}">
+  <button class="close" data-dismiss="alert">×</button>
+  {{ $message }}
+</div>
+{{ end }}
+{{ end }}
 {{ end }}
 
-{{ define "title" }} Minimalistic Bookmarking{{ end }}
+{{ define "title" }}{{ end }}
 
 {{ define "base" }}
 <!doctype html>
 <html>
   <head>
-    <title>SUFR {{ template "title" . }}</title>
+    <title>SUFR: {{ template "title" . }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic' rel='stylesheet' type='text/css'>
     <link type="text/css" rel="stylesheet" href="/static/css/bootstrap.min.css">

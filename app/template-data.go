@@ -10,7 +10,6 @@
 // templates/url-edit.html
 // templates/url-index.html
 // templates/url-new.html
-// templates/url-partial.html
 // templates/url-view.html
 // DO NOT EDIT!
 
@@ -361,7 +360,6 @@ var _bindata = map[string]func() (*asset, error){
 	"templates/url-edit.html": templatesUrlEditHtml,
 	"templates/url-index.html": templatesUrlIndexHtml,
 	"templates/url-new.html": templatesUrlNewHtml,
-	"templates/url-partial.html": templatesUrlPartialHtml,
 	"templates/url-view.html": templatesUrlViewHtml,
 }
 
@@ -416,7 +414,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"url-edit.html": &bintree{templatesUrlEditHtml, map[string]*bintree{}},
 		"url-index.html": &bintree{templatesUrlIndexHtml, map[string]*bintree{}},
 		"url-new.html": &bintree{templatesUrlNewHtml, map[string]*bintree{}},
-		"url-partial.html": &bintree{templatesUrlPartialHtml, map[string]*bintree{}},
 		"url-view.html": &bintree{templatesUrlViewHtml, map[string]*bintree{}},
 	}},
 }}

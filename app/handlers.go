@@ -199,6 +199,8 @@ func tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx["URLs"] = tag.GetURLs()
 	ctx["Count"] = len(tag.URLs)
 	ctx["Title"] = fmt.Sprintf("Tagged under %s", tag.Name)
+	ctx["IsTagView"] = true
+	ctx["Tag"] = tag
 
 	return renderTemplate(w, "url-index", ctx)
 }
