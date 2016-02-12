@@ -6,7 +6,7 @@ BIN_OUT=sufr
 
 all: build
 
-build: generate
+build: vendor-get generate
 	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)'
 
 generate:
@@ -14,3 +14,9 @@ generate:
 
 install:
 	@cp $(BIN_OUT) $(INSTALL_BIN)sufr
+
+vendor-get:
+	go get github.com/Masterminds/glide
+	go get github.com/jteeuwen/go-bindata
+	go get github.com/mjibson/esc
+	glide install
