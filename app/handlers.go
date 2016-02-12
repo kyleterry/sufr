@@ -388,7 +388,7 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 	settings := DeserializeSettings(val)
 	if r.Method == "GET" {
-		ctx["Settings"] = settings
+		ctx["SettingsObject"] = settings
 		return renderTemplate(w, "settings", ctx)
 	}
 

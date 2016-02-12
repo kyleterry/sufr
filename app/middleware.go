@@ -69,6 +69,9 @@ func SetSettingsHandler(h http.Handler) http.Handler {
 		settingsmap := make(map[string]interface{})
 		settingsmap["EmbedPhotos"] = settings.EmbedPhotos
 		settingsmap["EmbedVideos"] = settings.EmbedVideos
+		settingsmap["Version"] = config.Version
+		settingsmap["BuildTime"] = config.BuildTime
+		settingsmap["BuildGitHash"] = config.BuildGitHash
 		ctx["Settings"] = settingsmap
 		context.Set(r, TemplateContext, ctx)
 		h.ServeHTTP(w, r)

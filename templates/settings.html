@@ -1,8 +1,23 @@
 {{ define "title" }}{{.Title}}{{ end }}
 {{ define "content" }}
-{{ $settings := .Settings }}
+{{ $global := .Settings }}
+{{ $settings := .SettingsObject }}
 <div class="row">
   <div class="col-xs-12">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">Build Information</h3>
+          </div>
+          <div class="panel-body">
+            <p><strong>Version</strong> {{$global.Version}}</p>
+            <p><strong>Revision</strong> {{$global.BuildGitHash}}</p>
+            <p><strong>Time</strong> {{$global.BuildTime}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <form class="form-horizontal" action="{{ reverse "settings" }}" method="POST">
       <div class="form-group">
         <label class="col-xs-12 col-md-2 control-label">Visibility</label>

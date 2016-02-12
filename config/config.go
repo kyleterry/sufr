@@ -24,6 +24,8 @@ const (
 
 var (
 	ApplicationBind string
+	BuildTime       string
+	BuildGitHash    string
 	DataDir         string
 	DatabaseFile    string
 	TemplateDir     string
