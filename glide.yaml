@@ -9,3 +9,4 @@ import:
 - package: github.com/gorilla/handlers
 - package: github.com/arschles/go-bindata-html-template
 - package: github.com/mjibson/esc
+- package: github.com/nfnt/resize

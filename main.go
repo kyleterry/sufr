@@ -16,6 +16,6 @@ func main() {
 
 	sufrApp := app.New()
 
-	log.Printf("Listening on %s", config.ApplicationBind)
+	log.Printf("Listening on http://%s", config.ApplicationBind)
 	http.ListenAndServe(config.ApplicationBind, sufrApp)
 }

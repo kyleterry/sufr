@@ -29,6 +29,7 @@ var (
 	TemplateDir     string
 	StaticDir       string
 	RootDir         string
+	Debug           bool
 
 	ErrDatabaseAlreadyOpen = errors.New("Database is already open")
 	ErrKeyNotFound         = errors.New("Key doesn't exist in DB")
@@ -36,14 +37,20 @@ var (
 
 func New() {
 	RootDir = findWorkingDir()
+
 	flag.StringVar(&ApplicationBind, "bind", "localhost:8090", "Host and port to bind to")
+
 	//TODO(kt): handle windows configuration dir
 	defaultDataDir := fmt.Sprintf(path.Join(os.Getenv("HOME"), ".config", "sufr", "data"))
 	flag.StringVar(&DataDir, "data-dir", defaultDataDir, "Location to store data in")
+
 	defaultTemplateDir := path.Join(RootDir, "templates")
 	flag.StringVar(&TemplateDir, "template-dir", defaultTemplateDir, "Location where templates are stored")
+
 	defaultStaticDir := path.Join(RootDir, "static")
 	flag.StringVar(&StaticDir, "static-dir", defaultStaticDir, "Location where static assets are stored")
+
+	flag.BoolVar(&Debug, "debug", false, "Turn debugging on")
 
 	flag.Parse()
 

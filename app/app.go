@@ -54,6 +54,16 @@ func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
+	database = db.New(config.DatabaseFile)
+	if config.Debug {
+		go database.Statsdumper()
+	}
+	err := database.Open()
+	// Panic if we can't open the database
+	if err != nil {
+		log.Panic(err)
+	}
+
 	// This route is used to initially configure the instance
 	router.Handle("/config", errorHandler(registrationHandler)).Methods("POST", "GET").Name("config")
 	router.Handle("/login", errorHandler(loginHandler)).Methods("POST", "GET").Name("login")
@@ -74,14 +84,8 @@ func New() *Sufr {
 	router.Handle("/tag/{id:[0-9]+}", all.Then(errorHandler(tagViewHandler))).Name("tag-view")
 	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
 	router.Handle("/settings", auth.Then(errorHandler(settingsHandler))).Methods("POST", "GET").Name("settings")
+	router.Handle("/database-backup", auth.Then(errorHandler(database.BackupHandler))).Methods("GET").Name("database-backup")
 	router.PathPrefix("/").Handler(staticHandler)
-
-	database = db.New(config.DatabaseFile)
-	err := database.Open()
-	// Panic if we can't open the database
-	if err != nil {
-		log.Panic(err)
-	}
 
 	return app
 }

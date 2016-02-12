@@ -5,6 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/kyleterry/sufr/config"
@@ -28,6 +32,18 @@ type SufrItem interface {
 // New creates and returns a new pointer to a SufrDB struct
 func New(path string) *SufrDB {
 	return &SufrDB{path: path}
+}
+
+// Runs in it's own goroutine if debug is on
+func (sdb *SufrDB) Statsdumper() {
+	prev := sdb.database.Stats()
+	for {
+		time.Sleep(10 * time.Second)
+		stats := sdb.database.Stats()
+		diff := stats.Sub(&prev)
+		json.NewEncoder(os.Stderr).Encode(diff)
+		prev = stats
+	}
 }
 
 //Open will open the bolt database and panic on error
@@ -178,6 +194,20 @@ func (sdb *SufrDB) GetValuesByField(fieldname, bucket string, values ...string) 
 		return err
 	})
 	return items, values, err
+}
+
+func (sdb *SufrDB) BackupHandler(w http.ResponseWriter, req *http.Request) error {
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", `attachment; filename="sufr.db"`)
+		w.Header().Set("Content-Length", strconv.Itoa(int(tx.Size())))
+		_, err := tx.WriteTo(w)
+		return err
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func itob(v uint64) []byte {
