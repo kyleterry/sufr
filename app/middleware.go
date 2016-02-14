@@ -72,6 +72,7 @@ func SetSettingsHandler(h http.Handler) http.Handler {
 		settingsmap["Version"] = config.Version
 		settingsmap["BuildTime"] = config.BuildTime
 		settingsmap["BuildGitHash"] = config.BuildGitHash
+		settingsmap["DataDir"] = config.DataDir
 		ctx["Settings"] = settingsmap
 		context.Set(r, TemplateContext, ctx)
 		h.ServeHTTP(w, r)

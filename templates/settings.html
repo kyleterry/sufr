@@ -11,9 +11,24 @@
             <h3 class="panel-title">Build Information</h3>
           </div>
           <div class="panel-body">
-            <p><strong>Version</strong> {{$global.Version}}</p>
-            <p><strong>Revision</strong> {{$global.BuildGitHash}}</p>
-            <p><strong>Time</strong> {{$global.BuildTime}}</p>
+            <table class="table table-condensed">
+              <tr>
+                <td><strong>Version</strong></td>
+                <td>{{$global.Version}}</td>
+              </tr>
+              <tr>
+                <td><strong>Revision</strong></td>
+                <td class="always-wrap">{{$global.BuildGitHash}}</td>
+              </tr>
+              <tr>
+                <td><strong>Time</strong></td>
+                <td>{{$global.BuildTime}}</td>
+              </tr>
+              <tr>
+                <td><strong>Data Directory</strong></td>
+                <td>{{$global.DataDir}}</td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
@@ -34,7 +49,7 @@
               Private
             </label>
           </div>
-          <span id="helpBlock" class="help-block">Enable private instances if you want to hide everything from the public.</span>
+          <span class="help-block">Enable private instances if you want to hide everything from the public.</span>
         </div>
       </div>
       <div class="form-group">
@@ -52,7 +67,7 @@
               Embed Videos
             </label>
           </div>
-          <span id="helpBlock" class="help-block">Embedding content will allow pictures and videos to be visible in your SUFR feed.</span>
+          <span class="help-block">Embedding content will allow pictures and videos to be visible in your SUFR feed.</span>
         </div>
       </div>
       <div class="form-group">
@@ -69,7 +84,10 @@
           <p class="form-control-static">
             <a href="{{ reverse "database-backup" }}">Backup Database</a>
           </p>
+          <span class="help-block">Restore from the DB backup by copying the file into <code>{{$global.DataDir}}</code>.</span>
         </div>
+      </div>
+      <div class="col-xs-12">
       </div>
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-offset-2 col-lg-offset-2">
