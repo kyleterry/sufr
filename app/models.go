@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -305,8 +306,13 @@ func (t *Tag) RemoveURL(url *URL) {
 // Returns a []*URL slice
 func (t *Tag) GetURLs() []*URL {
 	if len(t.urlvalues) == 0 {
-		for i := range t.URLs {
-			b, err := database.Get(i, config.BucketNameURL)
+		var urls = []int{}
+		for i, _ := range t.URLs {
+			urls = append(urls, int(i))
+		}
+		sort.Sort(sort.Reverse(sort.IntSlice(urls)))
+		for _, i := range urls {
+			b, err := database.Get(uint64(i), config.BucketNameURL)
 			if err != nil {
 				continue
 			}

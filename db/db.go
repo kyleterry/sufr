@@ -150,6 +150,22 @@ func (sdb *SufrDB) GetAll(bucket string) ([][]byte, error) {
 	return items, err
 }
 
+func (sdb *SufrDB) GetDesc(bucket string) ([][]byte, error) {
+	items := [][]byte{}
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
+		c := b.Cursor()
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			items = append(items, v)
+		}
+		return nil
+	})
+	return items, err
+}
+
 // Delete will return raw bytes for an item at `id` or return an error
 func (sdb *SufrDB) Delete(id uint64, bucket string) error {
 	err := sdb.database.Update(func(tx *bolt.Tx) error {

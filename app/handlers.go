@@ -22,7 +22,7 @@ import (
 var staticHandler = http.FileServer(FS(false))
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	rawbytes, err := database.GetAll(config.BucketNameURL)
+	rawbytes, err := database.GetDesc(config.BucketNameURL)
 	urls := DeserializeURLs(rawbytes...)
 	if err != nil {
 		return err
