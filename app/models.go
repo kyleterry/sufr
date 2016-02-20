@@ -94,6 +94,7 @@ type URL struct {
 	URL       string    `json:"url"`
 	Title     string    `json:"title"`
 	Tags      itemSet   `json:"tags"`
+	Private   bool      `json:"private"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	tagvalues []*Tag
@@ -137,6 +138,10 @@ func (u *URL) GetID() uint64 {
 // SetID sets a uint64 id of the record
 func (u *URL) SetID(id uint64) {
 	u.ID = id
+}
+
+func (u *URL) IsPublic() bool {
+	return !u.Private
 }
 
 // FormattedCreatedAt is used in the template to display a human readable timestamp

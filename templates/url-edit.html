@@ -17,6 +17,18 @@
         </div>
         <span id="helpBlock" class="col-xs-11 col-xs-offset-1 help-block">Tags must be separated by a space</span>
       </div>
+      <div class="form-group">
+        <label class="col-xs-12 col-md-2 control-label">Visibility</label>
+        <div class="col-xs-11 col-md-10">
+          <div class="checkbox">
+            <label>
+              <input id="private" type="checkbox" name="private" {{ if $url.Private }}checked{{end}}>
+              Private
+            </label>
+          </div>
+          <span id="helpBlock" class="help-block">Private only applies when the global setting is public.</span>
+        </div>
+      </div>
       <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
     </form>
   </div>

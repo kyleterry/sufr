@@ -5,7 +5,9 @@
     {{if .Count}}
     {{ $settings := .Settings }}
     {{range $url := .URLs }}
+    {{ if $url.IsPublic or $settings.LoggedIn }}
       {{ template "url-partial" newcontext "URL" $url "Settings" $settings }}
+    {{end}}
     {{ end }}
     <div class="row">
       <div class="col-xs-12">

@@ -44,14 +44,15 @@ func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 	urlstring := r.FormValue("url")
 	tagsstring := r.FormValue("tags")
+	private := r.FormValue("private")
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		return err
+	}
 	if !govalidator.IsURL(urlstring) {
 		errormessage := "URL is required"
 		if urlstring != "" {
 			errormessage = fmt.Sprintf("URL \"%s\" is not valid", urlstring)
-		}
-		session, err := store.Get(r, "flashes")
-		if err != nil {
-			return err
 		}
 		session.AddFlash(errormessage, "danger")
 		session.Save(r, w)
@@ -61,14 +62,21 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 
 	title, err := getPageTitle(urlstring)
 	if err != nil {
-		// Add flash about title not being fetchable
+		// <strike>Add flash about title not being fetchable</strike>
 		// or alternatively add logic for detecting content type because it might be
 		// an image or PDF
+		session.AddFlash("Sorry! Could not fetch the page title!", "danger")
+		session.Save(r, w)
 	}
 
+	p, err := strconv.ParseBool(private)
+	if err != nil {
+		p = false
+	}
 	url := &URL{
 		URL:       urlstring,
 		Title:     title,
+		Private:   p,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -100,6 +108,11 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 
 	url := DeserializeURL(rawbytes)
 
+	if url.Private {
+		w.WriteHeader(404)
+		return renderTemplate(w, "404", nil)
+	}
+
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["URL"] = url
 
@@ -129,6 +142,7 @@ func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 	titlestring := r.FormValue("title")
 	tagsstring := r.FormValue("tags")
+	private := r.FormValue("private")
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
@@ -140,8 +154,13 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	p, err := strconv.ParseBool(private)
+	if err != nil {
+		p = false
+	}
 	url := DeserializeURL(rawbytes)
 	url.Title = titlestring
+	url.Private = p
 	url.UpdatedAt = time.Now()
 	err = url.SaveWithTags(tagsstring)
 	if err != nil {
