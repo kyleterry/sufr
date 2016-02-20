@@ -4,7 +4,11 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/oxtoacart/bpool"
 )
+
+var bufpool = bpool.NewBufferPool(64)
 
 var templateMap = map[string]*template.Template{
 	"url-index":         createTemplate("templates/base.html", "templates/url-index.html"),
