@@ -20,6 +20,7 @@ var templateMap = map[string]*template.Template{
 	"shitbucket-import": createTemplate("templates/base.html", "templates/shitbucket-import.html"),
 	"registration":      createTemplate("templates/config-base.html", "templates/register.html"),
 	"login":             createTemplate("templates/config-base.html", "templates/login.html"),
+	"404":               createTemplate("templates/config-base.html", "templates/404.html"),
 }
 
 var templateFuncs = template.FuncMap{
@@ -34,7 +35,19 @@ func renderTemplate(w http.ResponseWriter, name string, data interface{}) error 
 	if !ok {
 		log.Fatalf("missing template %s", name)
 	}
-	return t.ExecuteTemplate(w, "base", data)
+	buf := bufpool.Get()
+	defer bufpool.Put(buf)
+
+	// Avoid partially written responses by writing to a buffer
+	err := t.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		return err
+	}
+
+	// TODO(kt): Make this changeable when making the API
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	buf.WriteTo(w)
+	return nil
 }
 
 func createTemplate(files ...string) *template.Template {

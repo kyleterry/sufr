@@ -93,6 +93,11 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	if len(rawbytes) <= 0 {
+		w.WriteHeader(404)
+		return renderTemplate(w, "404", nil)
+	}
+
 	url := DeserializeURL(rawbytes)
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})

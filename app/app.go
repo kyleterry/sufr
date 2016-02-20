@@ -85,7 +85,12 @@ func New() *Sufr {
 	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
 	router.Handle("/settings", auth.Then(errorHandler(settingsHandler))).Methods("POST", "GET").Name("settings")
 	router.Handle("/database-backup", auth.Then(errorHandler(database.BackupHandler))).Methods("GET").Name("database-backup")
-	router.PathPrefix("/").Handler(staticHandler)
+	router.PathPrefix("/static").Handler(staticHandler)
+
+	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
+		w.WriteHeader(http.StatusNotFound)
+		return renderTemplate(w, "404", nil)
+	})
 
 	return app
 }
