@@ -94,7 +94,7 @@ func templates404Html() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/404.html", size: 344, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/404.html", size: 344, mode: os.FileMode(420), modTime: time.Unix(1455844218, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -114,7 +114,7 @@ func templatesBaseHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/base.html", size: 7608, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/base.html", size: 7608, mode: os.FileMode(420), modTime: time.Unix(1455911903, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -134,7 +134,7 @@ func templatesConfigBaseHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/config-base.html", size: 1621, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/config-base.html", size: 1621, mode: os.FileMode(420), modTime: time.Unix(1455843986, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -154,7 +154,7 @@ func templatesLoginHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/login.html", size: 925, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/login.html", size: 925, mode: os.FileMode(420), modTime: time.Unix(1455844022, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -174,7 +174,7 @@ func templatesRegisterHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/register.html", size: 3068, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/register.html", size: 3068, mode: os.FileMode(420), modTime: time.Unix(1455844119, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -194,7 +194,7 @@ func templatesSettingsHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/settings.html", size: 3862, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/settings.html", size: 3862, mode: os.FileMode(420), modTime: time.Unix(1455435507, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -214,7 +214,7 @@ func templatesShitbucketImportHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/shitbucket-import.html", size: 654, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/shitbucket-import.html", size: 654, mode: os.FileMode(420), modTime: time.Unix(1455259370, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -234,7 +234,7 @@ func templatesTagIndexHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/tag-index.html", size: 297, mode: os.FileMode(420), modTime: time.Unix(1455988041, 0)}
+	info := bindataFileInfo{name: "templates/tag-index.html", size: 297, mode: os.FileMode(420), modTime: time.Unix(1455259161, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -254,12 +254,12 @@ func templatesUrlEditHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-edit.html", size: 1649, mode: os.FileMode(420), modTime: time.Unix(1455989302, 0)}
+	info := bindataFileInfo{name: "templates/url-edit.html", size: 1649, mode: os.FileMode(420), modTime: time.Unix(1456002859, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
 
-var _templatesUrlIndexHtml = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x6c\x51\x4b\x6b\xdc\x30\x10\xbe\xef\xaf\x18\x44\xe8\x6d\xbd\xb4\xc7\x76\xd7\x87\x16\x0a\x81\xb4\x94\x36\x2d\xf4\xa8\xc8\xb3\xf6\x10\x59\x32\xd2\x78\x37\x60\xfc\xdf\x33\x92\x1f\x6b\x42\x4e\xf6\x37\xaf\xef\xa1\x61\x80\x0a\xcf\xe4\x10\x14\x13\x5b\x54\x30\x8e\x52\xa3\x33\x14\xf7\xf1\x51\xd7\xff\x08\xaf\x53\xa9\x10\x54\xfc\xd4\x2d\x4e\x10\x6d\xc4\x71\xfc\x41\x8e\x5a\x6d\x29\x32\x19\xf8\xea\xfd\x73\xab\xc3\x33\xb9\x3a\x0d\xb8\x6a\x9e\xcc\x3f\xbb\x0d\x93\xf1\x8e\xd1\x71\xe2\xda\x1d\x2b\xba\x80\xb1\x3a\xc6\x93\x0a\xfe\xaa\xca\x1d\xc0\xb6\x66\xbc\xdd\xbf\xc4\xfd\xc7\x4f\xb9\x03\x30\x0c\x49\xdb\x37\xdf\x3b\x96\xed\xa9\x02\x77\x11\x99\x85\x36\xc2\xe7\x13\x14\x7f\x16\xb0\x0e\x04\xed\x6a\x84\xbb\x3e\xd8\x3c\xf0\xf7\xf7\xc3\xa6\x99\xcc\xa6\x96\x18\xfe\xd5\x3f\x59\x31\xe2\xc3\xed\x62\xf1\xe0\xeb\x1a\xab\x7b\xb7\x2c\xe4\x15\xc6\xb6\xb3\x9a\xc5\x8b\x2c\xee\x3b\x1d\x98\xb4\x55\xe0\xf0\x9a\xbd\xbd\x30\x28\x21\x51\x13\xa5\x5a\x04\xa9\x8d\xd0\x95\x5e\xe2\xb9\x49\x99\xb3\x4a\xe8\xbd\x60\xde\xd6\xdf\x86\x93\xfb\xdd\xd2\x4d\x3a\xf6\x6d\xcf\x58\xa9\xf2\xbb\x04\x56\x25\x86\x29\x3a\x21\xf9\xd0\xa0\xb5\xd4\x7d\x39\x1e\xba\xf5\xf4\x41\x6e\x4f\x60\xf3\x2b\x12\xf3\x5b\xef\xde\xb9\x6e\xe4\x19\x31\xa8\xf2\xb1\xc1\x80\x40\x11\x9c\xe7\x46\xfc\x41\xc6\x4f\x3d\x43\x24\x8b\xce\x60\x01\xff\x7d\x0f\x46\x3b\xa0\xb6\xf3\x81\xa1\xd2\xac\xe1\x1c\x7c\x0b\xb2\x81\x01\x22\x86\x0b\x19\x8c\x40\x0e\xa4\x00\x47\x0d\x4d\xc0\xf3\x49\x89\xe6\x80\x17\x0c\x51\xc2\x8e\x6b\x90\xe3\xa8\xca\x05\x1d\x0f\xba\x2c\x56\x1b\xdb\x14\x67\x17\xf3\xe7\xd6\x79\x0d\x00\x00\xff\xff\x17\x81\x8b\x4b\xf6\x02\x00\x00")
+var _templatesUrlIndexHtml = []byte("\x1f\x8b\x08\x00\x00\x09\x6e\x88\x00\xff\x6c\x52\xc1\x6e\xd4\x30\x10\xbd\xef\x57\x8c\xac\x0a\xc1\x61\xb3\x82\x23\xec\xe6\x00\x12\x52\xa5\x82\x10\x14\x24\x8e\xae\x33\x49\x46\x75\xec\xc8\x9e\xec\x56\x8a\xf2\xef\x4c\x9c\xa4\xb8\xb0\xa7\xe4\xcd\x3c\xcf\x9b\xf7\xec\x71\x84\x0a\x6b\x72\x08\x8a\x89\x2d\x2a\x98\x26\xa9\x51\x0d\xc5\x6d\xbc\xd7\xcd\x2f\xc2\xcb\x52\x2a\x04\x15\x5f\x75\x87\x0b\x44\x1b\x71\x9a\xbe\x90\xa3\x4e\x5b\x8a\x4c\x06\x3e\x7a\xff\xd8\xe9\xf0\x48\xae\x99\x09\xae\x5a\x99\xe9\x67\x97\x29\x19\xef\x18\x1d\xcf\x5a\xbb\x63\x45\x67\x30\x56\xc7\x78\x52\xc1\x5f\x54\xb9\x03\xc8\x6b\xc6\xdb\xfd\x53\xdc\xbf\x7d\x97\x3a\x00\xe3\x38\xef\xf6\xc9\x0f\x8e\xe5\x34\xc0\x52\x83\x9b\x88\xcc\x22\x1c\xe1\xfd\x09\x8a\x1f\x1b\x78\x41\xb1\xbe\x69\xb0\x22\x97\x28\x77\x09\xdc\xba\x9c\x12\xb4\x6b\x10\x6e\x86\x60\x13\xe5\xe7\xf7\xbb\x6c\x42\x9a\x21\xda\xaf\x7d\xc8\x46\xcd\x64\x49\xea\xdb\xf0\x60\xc9\xbc\xc9\xd9\x89\xcf\xd8\xf5\x56\xb3\x78\x16\xde\xbe\xd7\x81\x49\x5b\x05\x0e\x2f\x29\x83\x27\x06\x25\x2a\x6a\xd1\x54\xdb\xda\x2a\xb3\xf3\x42\x5f\xa2\xcc\x1d\xad\xc9\x2e\xf8\x5a\x90\xff\x77\xfe\x8d\x73\x65\xf4\x5b\x7f\xde\x69\xdf\x0d\x8c\x95\x2a\x3f\x4b\xc8\xd5\xac\xb3\xc4\x2d\x52\xaf\x5a\xb4\x96\xfa\x0f\xc7\x43\x9f\x8d\x3f\xc8\xfc\x0d\x66\x40\xd6\x4d\x6f\x64\x77\x55\xc3\xc8\x03\xc0\xa0\xca\xfb\x16\x03\x02\x45\x70\x9e\x5b\x71\x0c\x09\x3f\x0c\x0c\x91\x2c\x3a\x83\x05\xfc\xf6\x03\x18\xed\x80\xba\xde\x07\x86\x4a\xb3\x86\x3a\xf8\x0e\xe4\x04\x06\x88\x18\xce\x64\x30\x82\x5c\x87\x14\xe0\xa8\xa1\x0d\x58\x9f\x94\x6c\x1e\xf0\x8c\x21\x4a\xfc\xf1\x39\xda\x69\x52\xe5\x86\x8e\x07\x5d\x16\xcf\x66\xf2\x44\x57\x1f\xeb\xe7\x6f\xe7\x4f\x00\x00\x00\xff\xff\x85\x1f\xa8\x61\x30\x03\x00\x00")
 
 func templatesUrlIndexHtmlBytes() ([]byte, error) {
 	return bindataRead(
@@ -274,7 +274,7 @@ func templatesUrlIndexHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-index.html", size: 758, mode: os.FileMode(420), modTime: time.Unix(1455989704, 0)}
+	info := bindataFileInfo{name: "templates/url-index.html", size: 816, mode: os.FileMode(420), modTime: time.Unix(1456012257, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -294,7 +294,7 @@ func templatesUrlNewHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-new.html", size: 1723, mode: os.FileMode(420), modTime: time.Unix(1455989132, 0)}
+	info := bindataFileInfo{name: "templates/url-new.html", size: 1723, mode: os.FileMode(420), modTime: time.Unix(1456002859, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -314,7 +314,7 @@ func templatesUrlViewHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-view.html", size: 149, mode: os.FileMode(420), modTime: time.Unix(1455988933, 0)}
+	info := bindataFileInfo{name: "templates/url-view.html", size: 149, mode: os.FileMode(420), modTime: time.Unix(1455258875, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }

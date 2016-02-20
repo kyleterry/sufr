@@ -15,10 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//var staticHandler = http.StripPrefix(
-//	"/static/",
-//	http.FileServer(http.Dir("static")))
-
 var staticHandler = http.FileServer(FS(false))
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
@@ -41,10 +37,28 @@ func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "url-new", ctx)
 }
 
+type URLSchema struct {
+	URL     string `schema:"url"`
+	Title   string `schema:"title"`
+	Tags    string `schema:"tags"`
+	Private bool   `schema:"private"`
+}
+
 func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
-	urlstring := r.FormValue("url")
-	tagsstring := r.FormValue("tags")
-	private := r.FormValue("private")
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	uschema := &URLSchema{}
+	decoder := schema.NewDecoder()
+
+	if err := decoder.Decode(uschema, r.PostForm); err != nil {
+		return err
+	}
+
+	urlstring := uschema.URL
+	tagsstring := uschema.Tags
+	private := uschema.Private
 	session, err := store.Get(r, "flashes")
 	if err != nil {
 		return err
@@ -69,14 +83,10 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 		session.Save(r, w)
 	}
 
-	p, err := strconv.ParseBool(private)
-	if err != nil {
-		p = false
-	}
 	url := &URL{
 		URL:       urlstring,
 		Title:     title,
-		Private:   p,
+		Private:   private,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -108,7 +118,7 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 
 	url := DeserializeURL(rawbytes)
 
-	if url.Private {
+	if !loggedIn(r) && url.Private {
 		w.WriteHeader(404)
 		return renderTemplate(w, "404", nil)
 	}
@@ -140,9 +150,20 @@ func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
-	titlestring := r.FormValue("title")
-	tagsstring := r.FormValue("tags")
-	private := r.FormValue("private")
+	if err := r.ParseForm(); err != nil {
+		return err
+	}
+
+	uschema := &URLSchema{}
+	decoder := schema.NewDecoder()
+
+	if err := decoder.Decode(uschema, r.PostForm); err != nil {
+		return err
+	}
+
+	title := uschema.Title
+	tagsstring := uschema.Tags
+	private := uschema.Private
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
@@ -154,13 +175,9 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	p, err := strconv.ParseBool(private)
-	if err != nil {
-		p = false
-	}
 	url := DeserializeURL(rawbytes)
-	url.Title = titlestring
-	url.Private = p
+	url.Title = title
+	url.Private = private
 	url.UpdatedAt = time.Now()
 	err = url.SaveWithTags(tagsstring)
 	if err != nil {
