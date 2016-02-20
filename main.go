@@ -17,5 +17,7 @@ func main() {
 	sufrApp := app.New()
 
 	log.Printf("Listening on http://%s", config.ApplicationBind)
-	http.ListenAndServe(config.ApplicationBind, sufrApp)
+	if err := http.ListenAndServe(config.ApplicationBind, sufrApp); err != nil {
+		panic(err)
+	}
 }
