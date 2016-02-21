@@ -5,21 +5,21 @@
   <div class="col-xs-12">
     <form class="form-horizontal" action="{{ reverse "url-save" "id" $url.ID }}" method="POST">
       <div class="form-group">
-        <label for="title" class="col-xs-1 control-label">Title</label>
-        <div class="col-xs-11">
+        <label for="title" class="col-xs-12 col-md-2 control-label">Title</label>
+        <div class="col-xs-12 col-md-10">
           <input id="title" class="form-control" type="text" name="title" value="{{$url.Title}}" placeholder="Example URL Title">
         </div>
       </div>
       <div class="form-group">
-        <label for="tags" class="col-xs-1 control-label">Tags</label>
-        <div class="col-xs-11">
+        <label for="tags" class="col-xs-12 col-md-2 control-label">Tags</label>
+        <div class="col-xs-12 col-md-10">
           <input id="tags" class="form-control" type="text" name="tags" value="{{ $url.GetTagsForDisplay }}" placeholder="computer-science lisp compilers" autocapitalize="none">
         </div>
-        <span id="helpBlock" class="col-xs-11 col-xs-offset-1 help-block">Tags must be separated by a space</span>
+        <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Tags must be separated by a space</span>
       </div>
       <div class="form-group">
         <label class="col-xs-12 col-md-2 control-label">Visibility</label>
-        <div class="col-xs-11 col-md-10">
+        <div class="col-xs-12 col-md-10">
           <div class="checkbox">
             <label>
               <input id="private" type="checkbox" name="private" {{ if $url.Private }}checked{{end}}>
@@ -29,7 +29,11 @@
           <span id="helpBlock" class="help-block">Private only applies when the global setting is public.</span>
         </div>
       </div>
-      <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-offset-2">
+          <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
+        </div>
+      </div>
     </form>
   </div>
 </div>

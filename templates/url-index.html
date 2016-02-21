@@ -10,11 +10,6 @@
           {{ template "url-partial" newcontext "URL" $url "Settings" $settings }}
         {{end}}
       {{ end }}
-      <div class="row">
-        <div class="col-xs-12">
-          <p class="text-muted">Found {{ .Count }}&hellip;</p>
-        </div>
-      </div>
     {{else}}
       <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="{{ reverse "settings" }}">settings</a>.</p>
     {{ end }}

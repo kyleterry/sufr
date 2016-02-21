@@ -7,7 +7,19 @@
         <a href="{{ .URL.URL }}" target="_blank">{{ .URL.Title }}</a>
       </h4>
 
-      <p class="text-muted always-wrap"><small><a href="{{ reverse "url-view" "id" .URL.ID }}">{{ .URL.FormattedCreatedAt }}</a> &middot; {{ .URL.URL }} {{ if isyoutube .URL.URL }}&middot; <i class="fa fa-film"></i>{{ end }}</small></p>
+      <p class="text-muted always-wrap">
+        {{ if .URL.Private }}
+          <i class="fa fa-lock"></i>
+        {{ else }}
+          <i class="fa fa-bookmark-o"></i>
+        {{ end }}
+        <small>
+          <a href="{{ reverse "url-view" "id" .URL.ID }}">{{ .URL.FormattedCreatedAt }}</a>
+          &middot;
+          {{ .URL.URL }}
+          {{ if isyoutube .URL.URL }}&middot; <i class="fa fa-film"></i>{{ end }}
+        </small>
+      </p>
 
       {{ if .Settings.EmbedVideos }}
       {{ if isyoutube .URL.URL }}
@@ -147,7 +159,7 @@
     <footer class="footer">
       <div class="container">
         <p class="text-muted pull-left">
-          &copy; Kyle Terry &middot; <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a> &middot; <a href="https://github.com/kyleterry/sufr/issues">Issues</a> &middot; <a href="#top">Back to top</a> &middot; Version: {{.Settings.Version}}
+          &copy; Kyle Terry &middot; <a href="https://github.com/kyleterry/sufr"><i class="fa fa-github"></i> Github</a> &middot; <a href="https://github.com/kyleterry/sufr/issues">Issues</a> &middot; <a href="#top">Back to top</a> &middot; {{.Settings.Version}}
         </p>
       </div>
     </footer>
