@@ -3,6 +3,8 @@
 SUFR (Simple URL and Fact Repository) is the successor to shitbucket. In short,
 it is a self-hosted URL bookmarker. Checkout my personal copy http://sufr.kyleterry.com/ for an idea of what it looks like. I upload new builds all the time.
 
+There are some [screenshots](./screenshots) in the repo.
+
 ## Install
 * Clone or `go get github.com/kyleterry/sufr` into your `$GOPATH`
 * `cd ${GOPATH}/src/github.com/kyleterry/sufr`
