@@ -4,20 +4,32 @@
   <div class="col-xs-12">
     <form class="form-horizontal" action="{{ reverse "url-submit" }}" method="POST">
       <div class="form-group">
-        <label for="url" class="col-md-1 col-xs-11 control-label">URL</label>
-        <div class="col-md-11 col-xs-12">
+        <label for="url" class="col-md-2 col-xs-12 control-label">URL</label>
+        <div class="col-md-10 col-xs-12">
           <input class="form-control" id="url-submit" type="text" name="url" placeholder="https://example.com" autocapitalize="none">
         </div>
       </div>
       <div class="form-group">
-        <label for="tags" class="col-md-1 col-xs-11 control-label">Tags</label>
-        <div class="col-md-11 col-xs-12">
+        <label for="tags" class="col-md-2 col-xs-12 control-label">Tags</label>
+        <div class="col-md-10 col-xs-12">
           <input id="tags" class="form-control" type="text" name="tags" placeholder="computer-science lisp compilers" autocapitalize="none">
         </div>
-        <span id="helpBlock" class="col-xs-12 col-md-offset-1 help-block">Tags must be separated by a space</span>
+        <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Tags must be separated by a space</span>
       </div>
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-offset-1 col-lg-offset-1">
+        <label class="col-xs-12 col-md-2 control-label">Visibility</label>
+        <div class="col-xs-12 col-md-10">
+          <div class="checkbox">
+            <label>
+              <input id="private" type="checkbox" name="private">
+              Private
+            </label>
+          </div>
+          <span id="helpBlock" class="help-block">Private only applies when the global setting is public.</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-offset-2">
           <button type="submit" class="btn btn-default">You're shitting me</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
         </div>
       </div>
