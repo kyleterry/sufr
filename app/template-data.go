@@ -114,7 +114,7 @@ func templatesBaseHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/base.html", size: 7812, mode: os.FileMode(420), modTime: time.Unix(1456013728, 0)}
+	info := bindataFileInfo{name: "templates/base.html", size: 7812, mode: os.FileMode(420), modTime: time.Unix(1456014830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -174,7 +174,7 @@ func templatesRegisterHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/register.html", size: 3068, mode: os.FileMode(420), modTime: time.Unix(1456013608, 0)}
+	info := bindataFileInfo{name: "templates/register.html", size: 3068, mode: os.FileMode(420), modTime: time.Unix(1456014830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -254,7 +254,7 @@ func templatesUrlEditHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-edit.html", size: 1810, mode: os.FileMode(420), modTime: time.Unix(1456013690, 0)}
+	info := bindataFileInfo{name: "templates/url-edit.html", size: 1810, mode: os.FileMode(420), modTime: time.Unix(1456014830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -274,7 +274,7 @@ func templatesUrlIndexHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-index.html", size: 669, mode: os.FileMode(420), modTime: time.Unix(1456013317, 0)}
+	info := bindataFileInfo{name: "templates/url-index.html", size: 669, mode: os.FileMode(420), modTime: time.Unix(1456014830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -294,7 +294,7 @@ func templatesUrlNewHtml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/url-new.html", size: 1707, mode: os.FileMode(420), modTime: time.Unix(1456013467, 0)}
+	info := bindataFileInfo{name: "templates/url-new.html", size: 1707, mode: os.FileMode(420), modTime: time.Unix(1456014830, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
