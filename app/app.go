@@ -143,11 +143,16 @@ func reverse(name string, params ...interface{}) string {
 	return url.Path
 }
 
+// Returns the page title or an error. If there is an error, the url is returned as well.
 func getPageTitle(url string) (string, error) {
 	doc, err := goquery.NewDocument(url)
 
+	if err != nil {
+		return url, err
+	}
+
 	title := doc.Find("title").Text()
-	return title, err
+	return title, nil
 }
 
 func parseTags(tagsstring string) []string {
