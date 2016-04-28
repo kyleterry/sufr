@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -15,7 +16,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var staticHandler = http.FileServer(FS(false))
+var staticHandler = http.FileServer(
+	&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo},
+)
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	rawbytes, err := database.GetDesc(config.BucketNameURL)

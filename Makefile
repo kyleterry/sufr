@@ -21,6 +21,5 @@ install:
 
 vendor-get:
 	go get github.com/jteeuwen/go-bindata
-	go get github.com/mjibson/esc
 
 .PHONY: all build cross-compile generate install vendor-get

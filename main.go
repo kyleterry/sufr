@@ -1,5 +1,4 @@
-//go:generate esc -o ./app/filesystem.go -pkg app static
-//go:generate go-bindata -o ./app/template-data.go -pkg app templates
+//go:generate go-bindata -o ./app/bindata.go -pkg app templates/... static/...
 package main
 
 import (
