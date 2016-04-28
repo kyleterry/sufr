@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/kyleterry/sufr",
-	"GoVersion": "go1.5",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v62",
 	"Deps": [
 		{
 			"ImportPath": "github.com/PuerkitoBio/goquery",
@@ -20,6 +21,10 @@
 			"ImportPath": "github.com/boltdb/bolt",
 			"Comment": "v1.1.0-65-gee4a088",
 			"Rev": "ee4a0888a9abe7eefe5a0992ca4cb06864839873"
+		},
+		{
+			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
+			"Rev": "57eb5e1fc594ad4b0b1dbea7b286d299e0cb43c2"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
@@ -50,6 +55,10 @@
 			"Rev": "78131a09b9e7bcccbb8a99d8e2f2168bb576e67a"
 		},
 		{
+			"ImportPath": "github.com/oxtoacart/bpool",
+			"Rev": "4e1c5567d7c2dd59fa4c7c83d34c2f3528b025d6"
+		},
+		{
 			"ImportPath": "golang.org/x/crypto/bcrypt",
 			"Rev": "f18420efc3b4f8e9f3d51f6bd2476e92c46260e9"
 		},
@@ -59,6 +68,10 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/html",
+			"Rev": "0cb26f788dd4625d1956c6fd97ffc4c90669d129"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html/atom",
 			"Rev": "0cb26f788dd4625d1956c6fd97ffc4c90669d129"
 		},
 		{
