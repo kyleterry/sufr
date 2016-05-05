@@ -345,6 +345,21 @@ func (t *Tag) Save() error {
 	return nil
 }
 
+type SortableTags []*Tag
+
+// Sorting
+func (t SortableTags) Len() int {
+	return len(t)
+}
+
+func (t SortableTags) Less(i, j int) bool {
+	return t[i].URLCount() > t[j].URLCount()
+}
+
+func (t SortableTags) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
+}
+
 // DeserializeTag will convert raw bytes of JSON into a URL struct pointer
 // Returns a *Tag
 func DeserializeTag(b []byte) *Tag {
@@ -357,7 +372,7 @@ func DeserializeTag(b []byte) *Tag {
 
 // DeserializeTags takes a slice of []byte and calls DeserializeTag on each one
 // Returns a slice of *Tag
-func DeserializeTags(b ...[]byte) []*Tag {
+func DeserializeTags(b ...[]byte) SortableTags {
 	var tags []*Tag
 	for _, rb := range b {
 		tags = append(tags, DeserializeTag(rb))
