@@ -3,7 +3,7 @@
 <div class="row">
   <div class="col-lg-12">
     {{range $tag := .Tags}}
-    <a class="btn" href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }} ({{$tag.URLCount}})</a>
+    <a class="btn" href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }} ({{$tag.URLCount}})</a><br>
     {{else}}
     Nothing.
     {{end}}
