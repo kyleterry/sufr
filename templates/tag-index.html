@@ -2,11 +2,13 @@
 {{ define "content" }}
 <div class="row">
   <div class="col-lg-12">
+    {{if .Tags}}<ul class="list-unstyled">{{end}}
     {{range $tag := .Tags}}
-    <a class="btn" href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }} ({{$tag.URLCount}})</a>
+    <li><a class="btn" href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }} ({{$tag.URLCount}})</a></li>
     {{else}}
     Nothing.
     {{end}}
+    {{if .Tags}}</ul>{{end}}
   </div>
 </div>
 {{ end }}

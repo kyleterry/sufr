@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -257,6 +258,8 @@ func tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+
+	sort.Sort(tags)
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Tags"] = tags
