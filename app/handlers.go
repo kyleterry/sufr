@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -155,6 +156,17 @@ func urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
+	response, err := json.Marshal(struct {
+		State bool `json:"state"`
+	}{url.Favorite})
+
+	if err != nil {
+		return err
+	}
+
+	w.Write(response)
 	return nil
 }
 

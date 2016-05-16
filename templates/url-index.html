@@ -2,15 +2,15 @@
 {{ define "content" }}
 <div class="row">
   <div class="col-xs-12">
-    {{if .Count}}
+    {{ if .Count }}
       {{ $settings := .Settings }}
       {{ $loggedin := .LoggedIn }}
-      {{range $url := .URLs }}
+      {{ range $url := .URLs }}
         {{ if (or $loggedin $url.IsPublic) }}
-          {{ template "url-partial" newcontext "URL" $url "Settings" $settings }}
+          {{ template "url-partial" newcontext "URL" $url "Settings" $settings "LoggedIn" $loggedin }}
         {{end}}
       {{ end }}
-    {{else}}
+    {{ else }}
       <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="{{ reverse "settings" }}">settings</a>.</p>
     {{ end }}
   </div>
