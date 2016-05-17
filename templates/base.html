@@ -35,8 +35,15 @@
 
       <div class="url-actions">
         <span class="hidden">
-          <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}">Edit</a>
+          {{ if .URL.Favorite }}
+          <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart"></i></a>
+          {{ else }}
+          <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart-o"></i></a>
+          {{ end }}
+          <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}"><i class="fa fa-pencil"></i></a>
+          {{ if .LoggedIn }}
           <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
+          {{ end }}
         </span>
       </div>
     </div>
@@ -166,7 +173,7 @@
     {{ template "modal" . }}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
-    {{ if .LoggedIn }}<script src="/static/js/app.js"></script>{{ end }}
+    <script src="/static/js/app.js"></script>
     <script src="/static/js/defer.js"></script>
     <div class="device-xs visible-xs"></div>
     <div class="device-sm visible-sm"></div>

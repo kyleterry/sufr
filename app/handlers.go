@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sort"
@@ -131,6 +132,43 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx["URL"] = url
 
 	return renderTemplate(w, "url-view", ctx)
+}
+
+func urlFavHandler(w http.ResponseWriter, r *http.Request) error {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseUint((vars["id"]), 10, 64)
+	if err != nil {
+		return err
+	}
+	rawbytes, err := database.Get(id, config.BucketNameURL)
+	if err != nil {
+		return err
+	}
+
+	url := DeserializeURL(rawbytes)
+
+	if url.Favorite {
+		url.Favorite = false
+	} else {
+		url.Favorite = true
+	}
+
+	if err := url.Save(); err != nil {
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	response, err := json.Marshal(struct {
+		State bool `json:"state"`
+	}{url.Favorite})
+
+	if err != nil {
+		return err
+	}
+
+	w.Write(response)
+	return nil
 }
 
 func urlEditHandler(w http.ResponseWriter, r *http.Request) error {

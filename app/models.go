@@ -95,6 +95,7 @@ type URL struct {
 	Title     string    `json:"title"`
 	Tags      itemSet   `json:"tags"`
 	Private   bool      `json:"private"`
+	Favorite  bool      `json:"favorite"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	tagvalues []*Tag

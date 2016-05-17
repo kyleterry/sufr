@@ -80,6 +80,7 @@ func New() *Sufr {
 	router.Handle("/url/{id:[0-9]+}/edit", auth.Then(errorHandler(urlEditHandler))).Name("url-edit")
 	router.Handle("/url/{id:[0-9]+}/save", auth.Then(errorHandler(urlSaveHandler))).Methods("POST").Name("url-save")
 	router.Handle("/url/{id:[0-9]+}/delete", auth.Then(errorHandler(urlDeleteHandler))).Name("url-delete")
+	router.Handle("/url/{id:[0-9]+}/toggle-fav", auth.Then(errorHandler(urlFavHandler))).Methods("POST").Name("url-fav-toggle")
 	router.Handle("/tag", all.Then(errorHandler(tagIndexHandler))).Name("tag-index")
 	router.Handle("/tag/{id:[0-9]+}", all.Then(errorHandler(tagViewHandler))).Name("tag-view")
 	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
