@@ -29,6 +29,7 @@ database file. This can be backed up from the settings page.
 ### Running in Docker
 
 There is a Docker image available on Docker hub:
+
 `docker pull kyleterry/sufr`  
 `docker run -P -d --name sufr kyleterry/sufr`
 
