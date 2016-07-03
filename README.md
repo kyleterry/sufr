@@ -14,11 +14,11 @@ There are some [screenshots](./screenshots) in the repo.
 This will install `sufr` into the default `PREFIX` which is `/usr/local/bin/`. Omit the last install step if you want to copy the binary somewhere else.
 
 NOTE: I will be crosscompiling binaries. Everything (assets and templates and
-database) are compiled into SUFR so you will only need the one binary to run it.
+database) are compiled into sufr so you will only need the one binary to run it.
 There is no need to copy css, html, and javascript around.
 
 ## Running
-Once you install SUFR, you can simply run the binary and access the address in
+Once you install sufr, you can simply run the binary and access the address in
 the browser. You will see a setup page and will be able to configure your
 instance from there.
 
@@ -27,11 +27,16 @@ program, it will generate a directory in `${HOME}/.config/sufr/data` for it's
 database file. This can be backed up from the settings page.
 
 ### Running in Docker
-
 There is a Docker image available on Docker hub:
 
 `docker pull kyleterry/sufr`  
 `docker run -P -d --name sufr kyleterry/sufr`
 
+## Backups
+The sufr database can be backed up in the settings. From the UI, click on your username dropdown in the menu bar and then click on `settings`. From the settings page, scroll down to the bottom and look for a link called `Backup Database`. When you click this, it will start a download. This is your database file. It's a binary blob. Keep it safe in case you need to restore.
+
+### Restoring
+If you need to restore, copy the database file into `${HOME}/.config/sufr/data/sufr.db` on the machine that sufr runs on.
+
 ## Dev mode
-SUFR has a `-debug` flag that doesn't currently do much. It just starts a goroutine to spit out database stats every 10 seconds. I will add better debugging in the near future.
+sufr has a `-debug` flag that doesn't currently do much. It just starts a goroutine to spit out database stats every 10 seconds. I will add better debugging in the near future.
