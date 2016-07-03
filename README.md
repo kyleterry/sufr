@@ -26,5 +26,11 @@ When you run the
 program, it will generate a directory in `${HOME}/.config/sufr/data` for it's
 database file. This can be backed up from the settings page.
 
+### Running in Docker
+
+There is a Docker image available on Docker hub:
+`docker pull kyleterry/sufr`  
+`docker run -P -d --name sufr kyleterry/sufr`
+
 ## Dev mode
 SUFR has a `-debug` flag that doesn't currently do much. It just starts a goroutine to spit out database stats every 10 seconds. I will add better debugging in the near future.
