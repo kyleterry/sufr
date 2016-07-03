@@ -20,6 +20,6 @@ install:
 	@cp $(BIN_OUT) $(INSTALL_BIN)sufr
 
 vendor-get:
-	go get github.com/jteeuwen/go-bindata
+	go get -u -v github.com/jteeuwen/go-bindata/...
 
 .PHONY: all build cross-compile generate install vendor-get
