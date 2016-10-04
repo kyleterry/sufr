@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const Version = "1.1.0-dev"
+const Version = "1.1.1-dev"
 
 const (
 	DatabaseName   = "sufr.db"
