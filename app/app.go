@@ -28,6 +28,7 @@ var (
 const (
 	VisibilityPrivate = "private"
 	VisibilityPublic  = "public"
+	SUFRUserAgent     = "Linux:SUFR:v1.0 (by /u/found_dead)"
 )
 
 type templatecontext int
@@ -146,7 +147,22 @@ func reverse(name string, params ...interface{}) string {
 
 // Returns the page title or an error. If there is an error, the url is returned as well.
 func getPageTitle(url string) (string, error) {
-	doc, err := goquery.NewDocument(url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return url, err
+	}
+
+	req.Header.Set("User-Agent", SUFRUserAgent)
+
+	res, err := client.Do(req)
+	if err != nil {
+		return url, err
+	}
+
+	defer res.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 
 	if err != nil {
 		return url, err
