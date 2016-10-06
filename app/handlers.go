@@ -23,17 +23,31 @@ var staticHandler = http.FileServer(
 )
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	last := lastURLAdded()
-	// rawbytes, err := database.GetDesc(config.BucketNameURL)
-	rawbytes, err := database.GetSubset(last.ID, config.DefaultPerPage, config.BucketNameURL)
-	urls := DeserializeURLs(rawbytes...)
+	urlCount, err := database.BucketLength(config.BucketNameURL)
 	if err != nil {
 		return err
 	}
 
+	pagestr := r.URL.Query().Get("page")
+	if pagestr == "" {
+		pagestr = "1"
+	}
+	page, err := strconv.ParseInt(pagestr, 10, 64)
+	if err != nil {
+		return err
+	}
+
+	paginator := NewPaginator(urlCount, int(page), config.DefaultPerPage)
+	rawbytes, err := paginator.GetObjects(config.BucketNameURL)
+	if err != nil {
+		return err
+	}
+	urls := DeserializeURLs(rawbytes...)
+
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Count"] = len(urls)
 	ctx["URLs"] = urls
+	ctx["Paginator"] = paginator
 
 	return renderTemplate(w, "url-index", ctx)
 }

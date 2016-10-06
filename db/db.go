@@ -166,7 +166,7 @@ func (sdb *SufrDB) GetDesc(bucket string) ([][]byte, error) {
 	return items, err
 }
 
-func (sdb *SufrDB) GetSubset(start uint64, n uint64, bucket string) ([][]byte, error) {
+func (sdb *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, error) {
 	items := [][]byte{}
 	err := sdb.database.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(config.BucketNameRoot))
@@ -176,21 +176,28 @@ func (sdb *SufrDB) GetSubset(start uint64, n uint64, bucket string) ([][]byte, e
 
 		c := b.Cursor()
 
-		min := itob(start)
-		end := start - n
+		var k, v []byte
+		_, v = c.Last()
 
-		_, v := c.Seek(min)
-		items = append(items, v)
-
-		for start >= end {
-			_, v := c.Prev()
-			items = append(items, v)
-			start--
+		for offset > 0 {
+			k, v = c.Prev()
+			if k == nil {
+				return nil
+			}
+			offset--
 		}
 
-		// for k, v := c.Seek(min); k != nil && bytes.Compare(k, max) <= 0; k, v = c.Prev() {
-		// 	items = append(items, v)
-		// }
+		items = append(items, v)
+
+		for n-1 > 0 {
+			k, v := c.Prev()
+			if k == nil {
+				return nil
+			}
+			items = append(items, v)
+			n--
+		}
+
 		return nil
 	})
 	return items, err
@@ -257,6 +264,25 @@ func (sdb *SufrDB) GetValuesByField(fieldname, bucket string, values ...string) 
 		return err
 	})
 	return items, values, err
+}
+
+func (sdb *SufrDB) BucketLength(bucket string) (int, error) {
+	var count int
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
+
+		b.ForEach(func(_, v []byte) error {
+			count++
+			return nil
+		})
+
+		return nil
+	})
+
+	return count, err
 }
 
 func (sdb *SufrDB) BackupHandler(w http.ResponseWriter, req *http.Request) error {
