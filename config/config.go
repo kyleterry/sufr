@@ -20,6 +20,8 @@ const (
 	BucketNameUser = "user"
 	BucketNameTag  = "tag"
 	DBFileMode     = 0755
+
+	DefaultPerPage = 10
 )
 
 var (

@@ -23,7 +23,9 @@ var staticHandler = http.FileServer(
 )
 
 func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	rawbytes, err := database.GetDesc(config.BucketNameURL)
+	last := lastURLAdded()
+	// rawbytes, err := database.GetDesc(config.BucketNameURL)
+	rawbytes, err := database.GetSubset(last.ID, config.DefaultPerPage, config.BucketNameURL)
 	urls := DeserializeURLs(rawbytes...)
 	if err != nil {
 		return err
@@ -122,6 +124,8 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	url := DeserializeURL(rawbytes)
+
+	fmt.Println(url.ID)
 
 	if !loggedIn(r) && url.Private {
 		w.WriteHeader(404)
