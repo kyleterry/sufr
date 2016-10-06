@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -119,6 +120,15 @@ func DeserializeURLs(b ...[]byte) []*URL {
 		urls = append(urls, DeserializeURL(rb))
 	}
 	return urls
+}
+
+func lastURLAdded() *URL {
+	lastBytes, err := database.LatestItem(config.BucketNameURL)
+	if err != nil {
+		log.Println(err)
+	}
+	last := DeserializeURL(lastBytes)
+	return last
 }
 
 // Type returns object type (such as bucket name)

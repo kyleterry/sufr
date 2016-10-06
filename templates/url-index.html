@@ -10,6 +10,27 @@
           {{ template "url-partial" newcontext "URL" $url "Settings" $settings "LoggedIn" $loggedin }}
         {{end}}
       {{ end }}
+
+      <nav aria-label="...">
+        <ul class="pagination">
+          <li class="page-item{{ if not .Paginator.HasPrevious }} disabled{{ end }}">
+            <a class="page-link" href="{{ reverse "url-index" }}?page={{ .Paginator.PreviousPage }}" aria-label="Previous"{{ if not .Paginator.HasPrevious }}  tabindex="-1"{{ end }}>
+              <span aria-hidden="true">&laquo;</span>
+              <span class="sr-only">Previous</span>
+            </a>
+          </li>
+          {{ range $index, $page := .Paginator.Pages }}
+          <li class="page-item"><a class="page-link" href="{{ reverse "url-index" }}?page={{ $page }}">{{ $page }}</a></li>
+          {{ end }}
+          <li class="page-item{{ if not .Paginator.HasNext }} disabled{{ end }}">
+            <a class="page-link" href="{{ reverse "url-index" }}?page={{ .Paginator.NextPage }}" aria-label="Next"{{ if not .Paginator.HasNext }}  tabindex="-1"{{ end }}>
+              <span aria-hidden="true">&raquo;</span>
+              <span class="sr-only">Next</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
     {{ else }}
       <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="{{ reverse "settings" }}">settings</a>.</p>
     {{ end }}

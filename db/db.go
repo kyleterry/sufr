@@ -166,6 +166,60 @@ func (sdb *SufrDB) GetDesc(bucket string) ([][]byte, error) {
 	return items, err
 }
 
+func (sdb *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, error) {
+	items := [][]byte{}
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
+
+		c := b.Cursor()
+
+		var k, v []byte
+		_, v = c.Last()
+
+		for offset > 0 {
+			k, v = c.Prev()
+			if k == nil {
+				return nil
+			}
+			offset--
+		}
+
+		items = append(items, v)
+
+		for n-1 > 0 {
+			k, v := c.Prev()
+			if k == nil {
+				return nil
+			}
+			items = append(items, v)
+			n--
+		}
+
+		return nil
+	})
+	return items, err
+}
+
+func (sdb *SufrDB) LatestItem(bucket string) ([]byte, error) {
+	item := []byte{}
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
+
+		c := b.Cursor()
+
+		_, item = c.Last()
+
+		return nil
+	})
+	return item, err
+}
+
 // Delete will return raw bytes for an item at `id` or return an error
 func (sdb *SufrDB) Delete(id uint64, bucket string) error {
 	err := sdb.database.Update(func(tx *bolt.Tx) error {
@@ -210,6 +264,25 @@ func (sdb *SufrDB) GetValuesByField(fieldname, bucket string, values ...string) 
 		return err
 	})
 	return items, values, err
+}
+
+func (sdb *SufrDB) BucketLength(bucket string) (int, error) {
+	var count int
+	err := sdb.database.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(config.BucketNameRoot))
+		if bucket != config.BucketNameRoot {
+			b = b.Bucket([]byte(bucket))
+		}
+
+		b.ForEach(func(_, v []byte) error {
+			count++
+			return nil
+		})
+
+		return nil
+	})
+
+	return count, err
 }
 
 func (sdb *SufrDB) BackupHandler(w http.ResponseWriter, req *http.Request) error {
