@@ -28,7 +28,10 @@ var (
 const (
 	VisibilityPrivate = "private"
 	VisibilityPublic  = "public"
-	SUFRUserAgent     = "Linux:SUFR:v1.0"
+)
+
+var (
+	SUFRUserAgent = fmt.Sprintf("Linux:SUFR:v%s", config.Version)
 )
 
 type templatecontext int
