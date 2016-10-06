@@ -9,6 +9,9 @@ all: build
 build: vendor-get generate
 	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)'
 
+clean:
+	-rm $(BIN_OUT)
+
 cross-compile:
 	go get github.com/mitchellh/gox
 	gox -ldflags '$(LDFLAGS)'
@@ -22,4 +25,4 @@ install:
 vendor-get:
 	go get -u -v github.com/jteeuwen/go-bindata/...
 
-.PHONY: all build cross-compile generate install vendor-get
+.PHONY: all clean build cross-compile generate install vendor-get
