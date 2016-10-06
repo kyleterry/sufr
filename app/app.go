@@ -28,7 +28,7 @@ var (
 const (
 	VisibilityPrivate = "private"
 	VisibilityPublic  = "public"
-	SUFRUserAgent     = "Linux:SUFR:v1.0 (by /u/found_dead)"
+	SUFRUserAgent     = "Linux:SUFR:v1.0"
 )
 
 type templatecontext int
