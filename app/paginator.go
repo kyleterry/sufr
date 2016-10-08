@@ -28,6 +28,10 @@ func (p Paginator) TotalPages() int {
 	return p.NumRecords / p.PerPage
 }
 
+func (p Paginator) CurrentPage() int {
+	return p.Page
+}
+
 func (p Paginator) HasPrevious() bool {
 	return p.Page > 1
 }
