@@ -187,7 +187,9 @@ func (sdb *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, 
 			offset--
 		}
 
-		items = append(items, v)
+		if v != nil {
+			items = append(items, v)
+		}
 
 		for n-1 > 0 {
 			k, v := c.Prev()
