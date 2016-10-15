@@ -24,6 +24,10 @@ func (p Paginator) GetObjects(bucket string) ([][]byte, error) {
 	return database.GetSubset(uint64(offset), uint64(p.PerPage), bucket)
 }
 
+func (p Paginator) HasPagination() bool {
+	return p.NumRecords > p.PerPage
+}
+
 func (p Paginator) TotalPages() int {
 	return p.NumRecords / p.PerPage
 }

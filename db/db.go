@@ -177,7 +177,7 @@ func (sdb *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, 
 		c := b.Cursor()
 
 		var k, v []byte
-		_, v = c.Last()
+		k, v = c.Last()
 
 		for offset > 0 {
 			k, v = c.Prev()
@@ -187,7 +187,7 @@ func (sdb *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, 
 			offset--
 		}
 
-		if v != nil {
+		if k != nil {
 			items = append(items, v)
 		}
 

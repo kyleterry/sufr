@@ -11,6 +11,7 @@
         {{end}}
       {{ end }}
 
+      {{ if .Paginator.HasPagination }}
       <nav aria-label="...">
         <ul class="pagination">
           <li class="page-item{{ if not .Paginator.HasPrevious }} disabled{{ end }}">
@@ -31,6 +32,7 @@
           </li>
         </ul>
       </nav>
+      {{ end }}
 
     {{ else }}
       <p class="text-center">There is nothing here but silence. You can import data from other services in the <a href="{{ reverse "settings" }}">settings</a>.</p>
