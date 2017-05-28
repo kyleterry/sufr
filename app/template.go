@@ -27,6 +27,8 @@ var templateFuncs = template.FuncMap{
 	"reverse":    reverse,
 	"isyoutube":  isYoutube,
 	"youtubevid": youtubevid,
+	"isimgur":    isImgur,
+	"imgurgal":   imgurgal,
 	"newcontext": newcontext,
 }
 

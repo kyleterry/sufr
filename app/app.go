@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -20,9 +21,8 @@ import (
 )
 
 var (
-	router   = mux.NewRouter()
-	store    = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
-	database *db.SufrDB
+	router = mux.NewRouter()
+	store  = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 )
 
 const (
@@ -51,6 +51,7 @@ func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
 type Sufr struct {
+	db *db.SufrDB
 }
 
 // New created a new pointer to Sufr
@@ -58,43 +59,43 @@ func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
-	database = db.New(config.DatabaseFile)
+	app.db = db.New(config.DatabaseFile)
 	if config.Debug {
-		go database.Statsdumper()
+		go app.db.Statsdumper()
 	}
-	err := database.Open()
+	err := app.db.Open()
 	// Panic if we can't open the database
 	if err != nil {
 		log.Panic(err)
 	}
 
 	// This route is used to initially configure the instance
-	router.Handle("/config", errorHandler(registrationHandler)).Methods("POST", "GET").Name("config")
-	router.Handle("/login", errorHandler(loginHandler)).Methods("POST", "GET").Name("login")
-	router.Handle("/logout", errorHandler(logoutHandler)).Methods("POST", "GET").Name("logout")
+	router.Handle("/config", errorHandler(app.registrationHandler)).Methods("POST", "GET").Name("config")
+	router.Handle("/login", errorHandler(app.loginHandler)).Methods("POST", "GET").Name("login")
+	router.Handle("/logout", errorHandler(app.logoutHandler)).Methods("POST", "GET").Name("logout")
 
-	all := alice.New(SetSettingsHandler, SetLoggedInHandler, SetActiveTabHandler, LoggingHandler)
-	auth := alice.New(AuthHandler)
+	all := alice.New(app.SetSettingsHandler, app.SetLoggedInHandler, app.SetActiveTabHandler, LoggingHandler)
+	auth := alice.New(app.AuthHandler)
 	auth = auth.Extend(all)
 
-	router.Handle("/", all.Then(errorHandler(urlIndexHandler))).Name("url-index")
+	router.Handle("/", all.Then(errorHandler(app.urlIndexHandler))).Name("url-index")
 
 	urlrouter := router.PathPrefix("/url").Subrouter()
-	urlrouter.Handle("/new", auth.Then(errorHandler(urlNewHandler))).Name("url-new")
-	urlrouter.Handle("/submit", auth.Then(errorHandler(urlSubmitHandler))).Methods("POST").Name("url-submit")
-	urlrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(urlViewHandler))).Name("url-view")
-	urlrouter.Handle("/{id:[0-9]+}/edit", auth.Then(errorHandler(urlEditHandler))).Name("url-edit")
-	urlrouter.Handle("/{id:[0-9]+}/save", auth.Then(errorHandler(urlSaveHandler))).Methods("POST").Name("url-save")
-	urlrouter.Handle("/{id:[0-9]+}/delete", auth.Then(errorHandler(urlDeleteHandler))).Name("url-delete")
-	urlrouter.Handle("/{id:[0-9]+}/toggle-fav", auth.Then(errorHandler(urlFavHandler))).Methods("POST").Name("url-fav-toggle")
+	urlrouter.Handle("/new", auth.Then(errorHandler(app.urlNewHandler))).Name("url-new")
+	urlrouter.Handle("/submit", auth.Then(errorHandler(app.urlSubmitHandler))).Methods("POST").Name("url-submit")
+	urlrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(app.urlViewHandler))).Name("url-view")
+	urlrouter.Handle("/{id:[0-9]+}/edit", auth.Then(errorHandler(app.urlEditHandler))).Name("url-edit")
+	urlrouter.Handle("/{id:[0-9]+}/save", auth.Then(errorHandler(app.urlSaveHandler))).Methods("POST").Name("url-save")
+	urlrouter.Handle("/{id:[0-9]+}/delete", auth.Then(errorHandler(app.urlDeleteHandler))).Name("url-delete")
+	urlrouter.Handle("/{id:[0-9]+}/toggle-fav", auth.Then(errorHandler(app.urlFavHandler))).Methods("POST").Name("url-fav-toggle")
 
 	tagrouter := router.PathPrefix("/tag").Subrouter()
-	tagrouter.Handle("/", all.Then(errorHandler(tagIndexHandler))).Name("tag-index")
-	tagrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(tagViewHandler))).Name("tag-view")
+	tagrouter.Handle("/", all.Then(errorHandler(app.tagIndexHandler))).Name("tag-index")
+	tagrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(app.tagViewHandler))).Name("tag-view")
 
-	router.Handle("/import/shitbucket", auth.Then(errorHandler(shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
-	router.Handle("/settings", auth.Then(errorHandler(settingsHandler))).Methods("POST", "GET").Name("settings")
-	router.Handle("/database-backup", auth.Then(errorHandler(database.BackupHandler))).Methods("GET").Name("database-backup")
+	router.Handle("/import/shitbucket", auth.Then(errorHandler(app.shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
+	router.Handle("/settings", auth.Then(errorHandler(app.settingsHandler))).Methods("POST", "GET").Name("settings")
+	router.Handle("/database-backup", auth.Then(errorHandler(app.db.BackupHandler))).Methods("GET").Name("database-backup")
 	router.PathPrefix("/static").Handler(staticHandler)
 
 	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
@@ -121,7 +122,7 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	context.Set(r, TemplateContext, ctx)
 
 	// Have we configured?
-	if !applicationConfigured() {
+	if !s.applicationConfigured() {
 		if r.RequestURI != "/config" &&
 			!strings.HasPrefix(r.RequestURI, "/static") {
 			http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
@@ -132,7 +133,7 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Is it a private only instance?
-	if r.RequestURI != "/login" && instancePrivate() && !loggedIn(r) && !strings.HasPrefix(r.RequestURI, "/static") {
+	if r.RequestURI != "/login" && s.instancePrivate() && !s.loggedIn(r) && !strings.HasPrefix(r.RequestURI, "/static") {
 		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 		return
 	}
@@ -198,8 +199,8 @@ func ui64toa(v uint64) string {
 	return strconv.FormatUint(v, 10)
 }
 
-func applicationConfigured() bool {
-	settings, err := database.Get(uint64(1), config.BucketNameRoot)
+func (a *Sufr) applicationConfigured() bool {
+	settings, err := a.db.Get(uint64(1), config.BucketNameRoot)
 	if err != nil {
 		panic(err)
 	}
@@ -209,8 +210,8 @@ func applicationConfigured() bool {
 	return false
 }
 
-func instancePrivate() bool {
-	settingsbytes, err := database.Get(uint64(1), config.BucketNameRoot)
+func (a *Sufr) instancePrivate() bool {
+	settingsbytes, err := a.db.Get(uint64(1), config.BucketNameRoot)
 	if err != nil {
 		panic(err)
 	}
@@ -221,7 +222,7 @@ func instancePrivate() bool {
 	return false
 }
 
-func loggedIn(r *http.Request) bool {
+func (a *Sufr) loggedIn(r *http.Request) bool {
 	session, err := store.Get(r, "auth")
 	if err != nil {
 		panic(err)
@@ -234,7 +235,7 @@ func loggedIn(r *http.Request) bool {
 		return false
 	}
 
-	user, err := database.Get(userID, config.BucketNameUser)
+	user, err := a.db.Get(userID, config.BucketNameUser)
 	if err != nil {
 		panic(err)
 	}
@@ -253,6 +254,32 @@ func isYoutube(url string) bool {
 func youtubevid(video string) string {
 	u, _ := url.Parse(video)
 	return u.Query()["v"][0]
+}
+
+func isImgur(url string) bool {
+	// TODO add blacklist for other types of imgur links
+	return strings.Contains(url, "imgur.com")
+}
+
+// Will match things like FyCch, FyCch.jpg and so on so we can embed raw image links too
+var imgurRE = regexp.MustCompile(`^(.{5})\.?[a-zA-z]*$`)
+
+func imgurgal(gal string) string {
+	u, _ := url.Parse(gal)
+
+	parts := strings.Split(u.Path[1:], "/")
+	if len(parts) > 1 {
+		if parts[0] == "gallery" {
+			parts[0] = "a"
+		}
+	} else {
+		b := imgurRE.Find([]byte(parts[0]))
+		if len(b) > 0 {
+			parts[0] = string(b)
+		}
+	}
+
+	return strings.Join(parts, "/")
 }
 
 func newcontext(values ...interface{}) (map[string]interface{}, error) {

@@ -22,8 +22,8 @@ var staticHandler = http.FileServer(
 	&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo},
 )
 
-func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	urlCount, err := database.BucketLength(config.BucketNameURL)
+func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
+	urlCount, err := a.db.BucketLength(config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "url-index", ctx)
 }
 
-func urlNewHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Title"] = "Add a URL"
 	return renderTemplate(w, "url-new", ctx)
@@ -65,7 +65,7 @@ type URLSchema struct {
 	Private bool   `schema:"private"`
 }
 
-func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
@@ -121,13 +121,13 @@ func urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
 		return err
 	}
-	rawbytes, err := database.Get(id, config.BucketNameURL)
+	rawbytes, err := a.db.Get(id, config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 
 	fmt.Println(url.ID)
 
-	if !loggedIn(r) && url.Private {
+	if !a.loggedIn(r) && url.Private {
 		w.WriteHeader(404)
 		return renderTemplate(w, "404", nil)
 	}
@@ -152,13 +152,13 @@ func urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "url-view", ctx)
 }
 
-func urlFavHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
 		return err
 	}
-	rawbytes, err := database.Get(id, config.BucketNameURL)
+	rawbytes, err := a.db.Get(id, config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -189,13 +189,13 @@ func urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
 		return err
 	}
-	rawbytes, err := database.Get(id, config.BucketNameURL)
+	rawbytes, err := a.db.Get(id, config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "url-edit", ctx)
 }
 
-func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
 	}
 
-	rawbytes, err := database.Get(id, config.BucketNameURL)
+	rawbytes, err := a.db.Get(id, config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -248,14 +248,14 @@ func urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
 		return err
 	}
 
-	rawbytes, err := database.Get(id, config.BucketNameURL)
+	rawbytes, err := a.db.Get(id, config.BucketNameURL)
 	if err != nil {
 		return err
 	}
@@ -270,8 +270,8 @@ func urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	rawbytes, err := database.GetAll(config.BucketNameTag)
+func (a *Sufr) tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
+	rawbytes, err := a.db.GetAll(config.BucketNameTag)
 	tags := DeserializeTags(rawbytes...)
 	if err != nil {
 		return err
@@ -285,13 +285,13 @@ func tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "tag-index", ctx)
 }
 
-func tagViewHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseUint((vars["id"]), 10, 64)
 	if err != nil {
 		return err
 	}
-	rawbytes, err := database.Get(id, config.BucketNameTag)
+	rawbytes, err := a.db.Get(id, config.BucketNameTag)
 	if err != nil {
 		return err
 	}
@@ -316,8 +316,8 @@ type ConfigSchema struct {
 	EmbedVideos bool   `schema:"embedvideos"`
 }
 
-func registrationHandler(w http.ResponseWriter, r *http.Request) error {
-	if applicationConfigured() {
+func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error {
+	if a.applicationConfigured() {
 		http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	}
 
@@ -393,7 +393,7 @@ type LoginSchema struct {
 	Password string `schema:"password"`
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Title"] = "Login"
 	if r.Method == "GET" {
@@ -437,7 +437,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	userbytes, err := database.Get(uint64(1), config.BucketNameUser)
+	userbytes, err := a.db.Get(uint64(1), config.BucketNameUser)
 	if err != nil {
 		formErrors = append(formErrors, "Email and password did not match")
 	}
@@ -470,7 +470,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func logoutHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	session, err := store.Get(r, "auth")
 	if err != nil {
 		return err
@@ -482,10 +482,10 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func settingsHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Title"] = "Settings"
-	val, err := database.Get(uint64(1), config.BucketNameRoot)
+	val, err := a.db.Get(uint64(1), config.BucketNameRoot)
 	if err != nil {
 		return err
 	}

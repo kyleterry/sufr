@@ -14,19 +14,19 @@
             <table class="table table-condensed">
               <tr>
                 <td><strong>Version</strong></td>
-                <td>{{$global.Version}}</td>
+                <td><code>{{$global.Version}}</code></td>
               </tr>
               <tr>
                 <td><strong>Revision</strong></td>
-                <td class="always-wrap">{{$global.BuildGitHash}}</td>
+                <td class="always-wrap"><code><a href="https://github.com/kyleterry/sufr/commit/{{ $global.BuildGitHash }}">{{$global.BuildGitHash}}</a></code></td>
               </tr>
               <tr>
                 <td><strong>Time</strong></td>
-                <td>{{$global.BuildTime}}</td>
+                <td><code>{{$global.BuildTime}}</code></td>
               </tr>
               <tr>
                 <td><strong>Data Directory</strong></td>
-                <td>{{$global.DataDir}}</td>
+                <td><code>{{$global.DataDir}}</code></td>
               </tr>
             </table>
           </div>
@@ -79,12 +79,12 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Backups</label>
+        <label class="col-xs-12 col-md-2 control-label">Database</label>
         <div class="col-xs-11 col-md-10">
           <p class="form-control-static">
             <a href="{{ reverse "database-backup" }}">Backup Database</a>
           </p>
-          <span class="help-block">Restore from the DB backup by copying the file into <code>{{$global.DataDir}}</code>.</span>
+          <span class="help-block">Restore from the backup by copying the file into: <code>{{$global.DataDir}}</code></span>
         </div>
       </div>
       <div class="col-xs-12">

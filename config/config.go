@@ -21,7 +21,7 @@ const (
 	BucketNameTag  = "tag"
 	DBFileMode     = 0755
 
-	DefaultPerPage = 2
+	DefaultPerPage = 40
 )
 
 var (

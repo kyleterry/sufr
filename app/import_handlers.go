@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/context"
 )
 
-func shitbucketImportHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) shitbucketImportHandler(w http.ResponseWriter, r *http.Request) error {
 	if r.Method == "GET" {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
 		ctx["Title"] = "Import"

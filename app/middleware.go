@@ -14,9 +14,9 @@ func LoggingHandler(h http.Handler) http.Handler {
 	return handlers.CombinedLoggingHandler(os.Stdout, h)
 }
 
-func AuthHandler(h http.Handler) http.Handler {
+func (a *Sufr) AuthHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !loggedIn(r) {
+		if !a.loggedIn(r) {
 			http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 			return
 		}
@@ -24,12 +24,12 @@ func AuthHandler(h http.Handler) http.Handler {
 	})
 }
 
-func SetLoggedInHandler(h http.Handler) http.Handler {
+func (a *Sufr) SetLoggedInHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
-		ctx["LoggedIn"] = loggedIn(r)
+		ctx["LoggedIn"] = a.loggedIn(r)
 		if ctx["LoggedIn"].(bool) {
-			user, err := database.Get(uint64(1), config.BucketNameUser)
+			user, err := a.db.Get(uint64(1), config.BucketNameUser)
 			if err != nil {
 				panic(err) // if we say we are logged in, but can't get the user, then fucking panic
 			}
@@ -40,7 +40,7 @@ func SetLoggedInHandler(h http.Handler) http.Handler {
 	})
 }
 
-func SetActiveTabHandler(h http.Handler) http.Handler {
+func (a *Sufr) SetActiveTabHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
 		prefix := ""
@@ -58,10 +58,10 @@ func SetActiveTabHandler(h http.Handler) http.Handler {
 	})
 }
 
-func SetSettingsHandler(h http.Handler) http.Handler {
+func (a *Sufr) SetSettingsHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
-		settingsbytes, err := database.Get(uint64(1), config.BucketNameRoot)
+		settingsbytes, err := a.db.Get(uint64(1), config.BucketNameRoot)
 		if err != nil {
 			panic(err)
 		}

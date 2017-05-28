@@ -74,6 +74,21 @@ body > .container {
 
 code {
   font-size: 80%;
+  background-color: #3E4147;
+  padding: 4px;
+  color: #DFBA69;
+  border-radius: 3px;
+  -webkit-user-select: all;
+  -moz-user-select: all;
+  -ms-user-select: all;
+  user-select: all;
+}
+
+code a,
+code a:focus,
+code a:hover,
+code a:active {
+  color: #DFBA69;
 }
 
 .navbar-highlight {
@@ -108,9 +123,9 @@ code {
 }
 
 .logo {
-    padding: 5px;
+  padding: 5px;
 }
 
 .fav-btn {
-    color: #d14;
+  color: #d14;
 }
