@@ -7,11 +7,14 @@ import (
 
 	"github.com/kyleterry/sufr/app"
 	"github.com/kyleterry/sufr/config"
+	"github.com/kyleterry/sufr/data"
 )
 
 func main() {
 	config.New()
 	log.Println("Welcome to SUFR")
+
+	data.MustInit()
 
 	sufrApp := app.New()
 

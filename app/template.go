@@ -15,7 +15,6 @@ var templateMap = map[string]*template.Template{
 	"url-new":           createTemplate("templates/base.html", "templates/url-new.html"),
 	"url-view":          createTemplate("templates/base.html", "templates/url-view.html"),
 	"url-edit":          createTemplate("templates/base.html", "templates/url-edit.html"),
-	"tag-index":         createTemplate("templates/base.html", "templates/tag-index.html"),
 	"settings":          createTemplate("templates/base.html", "templates/settings.html"),
 	"shitbucket-import": createTemplate("templates/base.html", "templates/shitbucket-import.html"),
 	"registration":      createTemplate("templates/config-base.html", "templates/register.html"),

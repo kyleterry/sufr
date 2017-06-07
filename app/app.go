@@ -1,37 +1,30 @@
 package app
 
 import (
-	"errors"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"regexp"
-	"strconv"
 	"strings"
-	"unicode"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/google/uuid"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/alice"
-	"github.com/kyleterry/sufr/config"
-	"github.com/kyleterry/sufr/db"
+	"github.com/kyleterry/sufr/data"
+	"github.com/pkg/errors"
 )
+
+func init() {
+	gob.Register(uuid.UUID{})
+}
 
 var (
 	router = mux.NewRouter()
 	store  = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
-)
-
-const (
-	VisibilityPrivate = "private"
-	VisibilityPublic  = "public"
-)
-
-var (
-	SUFRUserAgent = fmt.Sprintf("Linux:SUFR:v%s", config.Version)
 )
 
 type templatecontext int
@@ -51,7 +44,6 @@ func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
 type Sufr struct {
-	db *db.SufrDB
 }
 
 // New created a new pointer to Sufr
@@ -59,43 +51,73 @@ func New() *Sufr {
 	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
-	app.db = db.New(config.DatabaseFile)
-	if config.Debug {
-		go app.db.Statsdumper()
-	}
-	err := app.db.Open()
-	// Panic if we can't open the database
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// This route is used to initially configure the instance
-	router.Handle("/config", errorHandler(app.registrationHandler)).Methods("POST", "GET").Name("config")
-	router.Handle("/login", errorHandler(app.loginHandler)).Methods("POST", "GET").Name("login")
-	router.Handle("/logout", errorHandler(app.logoutHandler)).Methods("POST", "GET").Name("logout")
-
+	// Wrapped middlware
 	all := alice.New(app.SetSettingsHandler, app.SetLoggedInHandler, app.SetActiveTabHandler, LoggingHandler)
 	auth := alice.New(app.AuthHandler)
 	auth = auth.Extend(all)
 
-	router.Handle("/", all.Then(errorHandler(app.urlIndexHandler))).Name("url-index")
+	const idPattern = "{id:(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}"
+
+	// This route is used to initially configure the instance
+	router.Handle("/config", errorHandler(app.registrationHandler)).
+		Methods("POST", "GET").
+		Name("config")
+
+	router.Handle("/login", errorHandler(app.loginHandler)).
+		Methods("POST", "GET").
+		Name("login")
+
+	router.Handle("/logout", errorHandler(app.logoutHandler)).
+		Methods("POST", "GET").
+		Name("logout")
+
+	router.Handle("/", all.Then(errorHandler(app.urlIndexHandler))).
+		Name("url-index")
 
 	urlrouter := router.PathPrefix("/url").Subrouter()
-	urlrouter.Handle("/new", auth.Then(errorHandler(app.urlNewHandler))).Name("url-new")
-	urlrouter.Handle("/submit", auth.Then(errorHandler(app.urlSubmitHandler))).Methods("POST").Name("url-submit")
-	urlrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(app.urlViewHandler))).Name("url-view")
-	urlrouter.Handle("/{id:[0-9]+}/edit", auth.Then(errorHandler(app.urlEditHandler))).Name("url-edit")
-	urlrouter.Handle("/{id:[0-9]+}/save", auth.Then(errorHandler(app.urlSaveHandler))).Methods("POST").Name("url-save")
-	urlrouter.Handle("/{id:[0-9]+}/delete", auth.Then(errorHandler(app.urlDeleteHandler))).Name("url-delete")
-	urlrouter.Handle("/{id:[0-9]+}/toggle-fav", auth.Then(errorHandler(app.urlFavHandler))).Methods("POST").Name("url-fav-toggle")
+
+	urlrouter.Handle("/new", auth.Then(errorHandler(app.urlNewHandler))).
+		Methods("GET").
+		Name("url-new")
+
+	urlrouter.Handle("/submit", auth.Then(errorHandler(app.urlSubmitHandler))).
+		Methods("POST").
+		Name("url-submit")
+
+	urlrouter.Handle("/"+idPattern, all.Then(errorHandler(app.urlViewHandler))).
+		Methods("GET").
+		Name("url-view")
+
+	urlrouter.Handle("/"+idPattern+"/edit", auth.Then(errorHandler(app.urlEditHandler))).
+		Methods("GET").
+		Name("url-edit")
+
+	urlrouter.Handle("/"+idPattern+"/save", auth.Then(errorHandler(app.urlSaveHandler))).
+		Methods("POST").
+		Name("url-save")
+
+	// this should use the DELETE method
+	urlrouter.Handle("/"+idPattern+"/delete", auth.Then(errorHandler(app.urlDeleteHandler))).
+		Name("url-delete")
+
+	urlrouter.Handle("/"+idPattern+"/toggle-fav", auth.Then(errorHandler(app.urlFavHandler))).
+		Methods("POST").
+		Name("url-fav-toggle")
 
 	tagrouter := router.PathPrefix("/tag").Subrouter()
-	tagrouter.Handle("/", all.Then(errorHandler(app.tagIndexHandler))).Name("tag-index")
-	tagrouter.Handle("/{id:[0-9]+}", all.Then(errorHandler(app.tagViewHandler))).Name("tag-view")
 
-	router.Handle("/import/shitbucket", auth.Then(errorHandler(app.shitbucketImportHandler))).Methods("POST", "GET").Name("shitbucket-import")
-	router.Handle("/settings", auth.Then(errorHandler(app.settingsHandler))).Methods("POST", "GET").Name("settings")
-	router.Handle("/database-backup", auth.Then(errorHandler(app.db.BackupHandler))).Methods("GET").Name("database-backup")
+	tagrouter.Handle("/"+idPattern, all.Then(errorHandler(app.tagViewHandler))).
+		Methods("GET").
+		Name("tag-view")
+
+	router.Handle("/settings", auth.Then(errorHandler(app.settingsHandler))).
+		Methods("POST", "GET").
+		Name("settings")
+
+	router.Handle("/database-backup", auth.Then(errorHandler(data.BackupHandler))).
+		Methods("GET").
+		Name("database-backup")
+
 	router.PathPrefix("/static").Handler(staticHandler)
 
 	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
@@ -122,7 +144,7 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	context.Set(r, TemplateContext, ctx)
 
 	// Have we configured?
-	if !s.applicationConfigured() {
+	if !applicationConfigured() {
 		if r.RequestURI != "/config" &&
 			!strings.HasPrefix(r.RequestURI, "/static") {
 			http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
@@ -133,7 +155,7 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Is it a private only instance?
-	if r.RequestURI != "/login" && s.instancePrivate() && !s.loggedIn(r) && !strings.HasPrefix(r.RequestURI, "/static") {
+	if r.RequestURI != "/login" && instancePrivate() && !loggedIn(r) && !strings.HasPrefix(r.RequestURI, "/static") {
 		http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 		return
 	}
@@ -144,103 +166,82 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // reverse Uses gorilla mux to give us a uri path by name. This is attached to template Funcs
 func reverse(name string, params ...interface{}) string {
 	s := make([]string, len(params))
+
 	for _, param := range params {
 		s = append(s, fmt.Sprint(param))
 	}
-	url, err := router.GetRoute(name).URL(s...)
+
+	route := router.Get(name)
+	if route == nil {
+		log.Printf("ERROR: %s is not a valid route index", name)
+		return ""
+	}
+
+	url, err := route.URL(s...)
 	if err != nil {
 		log.Println(err)
+		return ""
 	}
+
 	return url.Path
 }
 
-// Returns the page title or an error. If there is an error, the url is returned as well.
-func getPageTitle(url string) (string, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+func applicationConfigured() bool {
+	_, err := data.GetSettings()
 	if err != nil {
-		return url, err
-	}
+		if errors.Cause(err) == data.ErrNotFound {
+			return false
+		}
 
-	req.Header.Set("User-Agent", SUFRUserAgent)
-
-	res, err := client.Do(req)
-	if err != nil {
-		return url, err
-	}
-
-	defer res.Body.Close()
-
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-
-	if err != nil {
-		return url, err
-	}
-
-	title := doc.Find("title").Text()
-	return title, nil
-}
-
-func parseTags(tagsstring string) []string {
-	return strings.FieldsFunc(tagsstring, func(c rune) bool {
-		return !unicode.IsLetter(c) && !unicode.IsNumber(c) && !unicode.IsPunct(c)
-	})
-}
-
-func parseTagsMap(tagsstring string) map[string]struct{} {
-	var m = make(map[string]struct{})
-	for _, t := range parseTags(tagsstring) {
-		m[t] = struct{}{}
-	}
-	return m
-}
-
-func ui64toa(v uint64) string {
-	return strconv.FormatUint(v, 10)
-}
-
-func (a *Sufr) applicationConfigured() bool {
-	settings, err := a.db.Get(uint64(1), config.BucketNameRoot)
-	if err != nil {
 		panic(err)
 	}
-	if settings != nil {
+
+	return true
+}
+
+func instancePrivate() bool {
+	settings, err := data.GetSettings()
+	if err != nil {
+		if err == data.ErrNotFound {
+			return false
+		}
+
+		panic(err)
+	}
+
+	if settings.Private {
 		return true
 	}
+
 	return false
 }
 
-func (a *Sufr) instancePrivate() bool {
-	settingsbytes, err := a.db.Get(uint64(1), config.BucketNameRoot)
-	if err != nil {
-		panic(err)
-	}
-	settings := DeserializeSettings(settingsbytes)
-	if settings.Visibility == VisibilityPrivate {
-		return true
-	}
-	return false
-}
-
-func (a *Sufr) loggedIn(r *http.Request) bool {
+func loggedIn(r *http.Request) bool {
 	session, err := store.Get(r, "auth")
 	if err != nil {
 		panic(err)
 	}
 
 	val := session.Values["userID"]
-	userID, ok := val.(uint64)
-
-	if !ok || userID <= 0 {
+	if val == nil {
 		return false
 	}
 
-	user, err := a.db.Get(userID, config.BucketNameUser)
+	id := val.(uuid.UUID)
 	if err != nil {
+		return false
+	}
+
+	user, err := data.GetUser()
+	if err != nil {
+		if err == data.ErrNotFound {
+			return false
+		}
+
 		panic(err)
 	}
 
-	if user == nil {
+	if user.ID != id {
 		return false
 	}
 

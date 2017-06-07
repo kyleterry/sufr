@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
 	"github.com/kyleterry/sufr/config"
+	"github.com/kyleterry/sufr/data"
 )
 
 func LoggingHandler(h http.Handler) http.Handler {
@@ -16,7 +17,7 @@ func LoggingHandler(h http.Handler) http.Handler {
 
 func (a *Sufr) AuthHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !a.loggedIn(r) {
+		if !loggedIn(r) {
 			http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 			return
 		}
@@ -27,13 +28,14 @@ func (a *Sufr) AuthHandler(h http.Handler) http.Handler {
 func (a *Sufr) SetLoggedInHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
-		ctx["LoggedIn"] = a.loggedIn(r)
+		ctx["LoggedIn"] = loggedIn(r)
 		if ctx["LoggedIn"].(bool) {
-			user, err := a.db.Get(uint64(1), config.BucketNameUser)
+			user, err := data.GetUser()
 			if err != nil {
+				// TODO: Nah, fix this
 				panic(err) // if we say we are logged in, but can't get the user, then fucking panic
 			}
-			ctx["User"] = DeserializeUser(user)
+			ctx["User"] = user
 		}
 		context.Set(r, TemplateContext, ctx)
 		h.ServeHTTP(w, r)
@@ -61,14 +63,16 @@ func (a *Sufr) SetActiveTabHandler(h http.Handler) http.Handler {
 func (a *Sufr) SetSettingsHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Get(r, TemplateContext).(map[string]interface{})
-		settingsbytes, err := a.db.Get(uint64(1), config.BucketNameRoot)
+		settings, err := data.GetSettings()
 		if err != nil {
+			// TODO: please don't panic here
 			panic(err)
 		}
-		settings := DeserializeSettings(settingsbytes)
+
 		settingsmap := make(map[string]interface{})
 		settingsmap["EmbedPhotos"] = settings.EmbedPhotos
 		settingsmap["EmbedVideos"] = settings.EmbedVideos
+		settingsmap["PerPage"] = settings.PerPage
 		settingsmap["Version"] = config.Version
 		settingsmap["BuildTime"] = config.BuildTime
 		settingsmap["BuildGitHash"] = config.BuildGitHash

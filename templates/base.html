@@ -43,7 +43,7 @@
       {{ end }}
 
       {{ if .URL.HasTags }}
-      <i class="fa fa-tag"></i> {{ range $tag := .URL.GetTags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
+      <i class="fa fa-tag"></i> {{ range $tag := .URL.Tags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
       {{ end }}
 
       <div class="url-actions">
@@ -146,7 +146,6 @@
               <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
               no dashboard yet -->
               <!-- <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li> -->
-              <!-- <li {{if eq $active "tags"}}class="active"{{end}}><a href="{{ reverse "tag-index" }}"><i class="fa fa-tags"></i> Tags</a></li> -->
           </ul>
           <ul class="nav navbar-nav navbar-right">
             {{ if .LoggedIn }}

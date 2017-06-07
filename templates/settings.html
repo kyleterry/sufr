@@ -39,13 +39,13 @@
         <div class="col-xs-12 col-md-10">
           <div class="radio">
             <label>
-              <input id="visibility-public" type="radio" name="visibility" value="public" {{ if eq $settings.Visibility "public" }}checked{{end}}> 
+              <input id="visibility-public" type="radio" name="private" value="false" {{ if eq $settings.Private false }}checked{{end}}> 
               Public
             </label>
           </div>
           <div class="radio">
             <label>
-              <input id="visibility-private" type="radio" name="visibility" value="private" {{ if eq $settings.Visibility "private" }}checked{{end}}>
+              <input id="visibility-private" type="radio" name="private" value="true" {{ if eq $settings.Private true }}checked{{end}}>
               Private
             </label>
           </div>

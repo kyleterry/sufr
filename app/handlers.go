@@ -4,17 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
-	"strconv"
-	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/elazarl/go-bindata-assetfs"
+	"github.com/google/uuid"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
-	"github.com/kyleterry/sufr/config"
+	"github.com/kyleterry/sufr/data"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,31 +22,36 @@ var staticHandler = http.FileServer(
 )
 
 func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	urlCount, err := a.db.BucketLength(config.BucketNameURL)
+	urls, err := data.GetURLs()
 	if err != nil {
 		return err
 	}
 
-	pagestr := r.URL.Query().Get("page")
-	if pagestr == "" {
-		pagestr = "1"
-	}
-	page, err := strconv.ParseInt(pagestr, 10, 64)
-	if err != nil {
-		return err
-	}
+	// TODO: do pagination for urls
+	// urlCount, err := a.db.BucketLength(config.BucketNameURL)
+	// if err != nil {
+	// 	return err
+	// }
 
-	paginator := NewPaginator(urlCount, int(page), config.DefaultPerPage)
-	rawbytes, err := paginator.GetObjects(config.BucketNameURL)
-	if err != nil {
-		return err
-	}
-	urls := DeserializeURLs(rawbytes...)
+	// pagestr := r.URL.Query().Get("page")
+	// if pagestr == "" {
+	// 	pagestr = "1"
+	// }
+	// page, err := strconv.ParseInt(pagestr, 10, 64)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// paginator := NewPaginator(urlCount, int(page), config.DefaultPerPage)
+	// rawbytes, err := paginator.GetObjects(config.BucketNameURL)
+	// if err != nil {
+	// 	return err
+	// }
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Count"] = len(urls)
 	ctx["URLs"] = urls
-	ctx["Paginator"] = paginator
+	// ctx["Paginator"] = paginator
 
 	return renderTemplate(w, "url-index", ctx)
 }
@@ -58,61 +62,39 @@ func (a *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, "url-new", ctx)
 }
 
-type URLSchema struct {
-	URL     string `schema:"url"`
-	Title   string `schema:"title"`
-	Tags    string `schema:"tags"`
-	Private bool   `schema:"private"`
-}
-
 func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
+	decoder := schema.NewDecoder()
+
 	if err := r.ParseForm(); err != nil {
 		return err
 	}
 
-	uschema := &URLSchema{}
-	decoder := schema.NewDecoder()
+	createURLOptions := data.CreateURLOptions{}
 
-	if err := decoder.Decode(uschema, r.PostForm); err != nil {
+	if err := decoder.Decode(&createURLOptions, r.PostForm); err != nil {
 		return err
 	}
 
-	urlstring := uschema.URL
-	tagsstring := uschema.Tags
-	private := uschema.Private
-	session, err := store.Get(r, "flashes")
-	if err != nil {
-		return err
-	}
-	if !govalidator.IsURL(urlstring) {
-		errormessage := "URL is required"
-		if urlstring != "" {
-			errormessage = fmt.Sprintf("URL \"%s\" is not valid", urlstring)
-		}
-		session.AddFlash(errormessage, "danger")
-		session.Save(r, w)
-		http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
-		return nil
-	}
+	// session, err := store.Get(r, "flashes")
+	// if err != nil {
+	// 	return err
+	// }
 
-	title, err := getPageTitle(urlstring)
-	if err != nil {
-		// <strike>Add flash about title not being fetchable</strike>
-		// or alternatively add logic for detecting content type because it might be
-		// an image or PDF
-		session.AddFlash("Sorry! Could not fetch the page title!", "danger")
-		session.Save(r, w)
-	}
+	// if !govalidator.IsURL(createURLOptions.URL) {
+	// 	errormessage := "URL is required"
+	// 	if urlstring != "" {
+	// 		errormessage = fmt.Sprintf("URL \"%s\" is not valid", urlstring)
+	// 	}
+	// 	//TODO: wrap AddFlash in session.Flash()
+	// 	session.AddFlash(errormessage, "danger")
+	// 	session.Save(r, w)
+	// 	http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
+	// 	return nil
+	// }
 
-	url := &URL{
-		URL:       urlstring,
-		Title:     title,
-		Private:   private,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-	}
-
-	err = url.SaveWithTags(tagsstring)
+	// TODO: make and check for a validation error
+	// session.FlashValidationError(err)
+	url, err := data.CreateURL(createURLOptions)
 	if err != nil {
 		return err
 	}
@@ -123,25 +105,23 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 
 func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
+
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
-	rawbytes, err := a.db.Get(id, config.BucketNameURL)
+
+	url, err := data.GetURL(id)
 	if err != nil {
-		return err
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, "404", nil)
+		}
+
+		return errors.Wrap(err, "failed to get url")
 	}
 
-	if len(rawbytes) <= 0 {
-		w.WriteHeader(404)
-		return renderTemplate(w, "404", nil)
-	}
-
-	url := DeserializeURL(rawbytes)
-
-	fmt.Println(url.ID)
-
-	if !a.loggedIn(r) && url.Private {
+	if !loggedIn(r) && url.Private {
 		w.WriteHeader(404)
 		return renderTemplate(w, "404", nil)
 	}
@@ -154,25 +134,26 @@ func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 
 func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
+
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
-	rawbytes, err := a.db.Get(id, config.BucketNameURL)
+
+	url, err := data.GetURL(id)
+
 	if err != nil {
-		return err
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, "404", nil)
+		}
+
+		return errors.Wrap(err, "failed to get url")
 	}
 
-	url := DeserializeURL(rawbytes)
-
-	if url.Favorite {
-		url.Favorite = false
-	} else {
-		url.Favorite = true
-	}
-
-	if err := url.Save(); err != nil {
-		return err
+	err = url.ToggleFavorite()
+	if err != nil {
+		return errors.Wrap(err, "failed to toggle favorite flag")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -186,21 +167,27 @@ func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	w.Write(response)
+
 	return nil
 }
 
 func (a *Sufr) urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
-	if err != nil {
-		return err
-	}
-	rawbytes, err := a.db.Get(id, config.BucketNameURL)
+
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
 
-	url := DeserializeURL(rawbytes)
+	url, err := data.GetURL(id)
+	if err != nil {
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, "404", nil)
+		}
+
+		return errors.Wrap(err, "failed to get url")
+	}
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["URL"] = url
@@ -214,34 +201,29 @@ func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	uschema := &URLSchema{}
+	updateURLOptions := data.UpdateURLOptions{}
 	decoder := schema.NewDecoder()
 
-	if err := decoder.Decode(uschema, r.PostForm); err != nil {
+	if err := decoder.Decode(&updateURLOptions, r.PostForm); err != nil {
 		return err
 	}
 
-	title := uschema.Title
-	tagsstring := uschema.Tags
-	private := uschema.Private
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error fetching data: %s", err), http.StatusInternalServerError)
-	}
-
-	rawbytes, err := a.db.Get(id, config.BucketNameURL)
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
 
-	url := DeserializeURL(rawbytes)
-	url.Title = title
-	url.Private = private
-	url.UpdatedAt = time.Now()
-	err = url.SaveWithTags(tagsstring)
+	updateURLOptions.ID = id
+
+	url, err := data.UpdateURL(updateURLOptions)
 	if err != nil {
-		return err
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, "404", nil)
+		}
+
+		return errors.Wrap(err, "failed to get url")
 	}
 
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
@@ -250,74 +232,55 @@ func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 
 func (a *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
 
-	rawbytes, err := a.db.Get(id, config.BucketNameURL)
+	url, err := data.GetURL(id)
 	if err != nil {
-		return err
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, "404", nil)
+		}
+
+		return errors.Wrap(err, "failed to get url")
 	}
 
-	url := DeserializeURL(rawbytes)
-	err = url.Delete()
+	err = data.DeleteURL(url)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to delete url")
 	}
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	return nil
 }
 
-func (a *Sufr) tagIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	rawbytes, err := a.db.GetAll(config.BucketNameTag)
-	tags := DeserializeTags(rawbytes...)
-	if err != nil {
-		return err
-	}
-
-	sort.Sort(tags)
-
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Tags"] = tags
-
-	return renderTemplate(w, "tag-index", ctx)
-}
-
 func (a *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	id, err := strconv.ParseUint((vars["id"]), 10, 64)
-	if err != nil {
-		return err
-	}
-	rawbytes, err := a.db.Get(id, config.BucketNameTag)
+
+	id, err := uuid.Parse(vars["id"])
 	if err != nil {
 		return err
 	}
 
-	tag := DeserializeTag(rawbytes)
+	tag, err := data.GetTag(id)
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["URLs"] = tag.GetURLs()
+	ctx["URLs"] = tag.URLs
 	ctx["Count"] = len(tag.URLs)
-	ctx["Title"] = fmt.Sprintf("Tagged under %s", tag.Name)
+	ctx["Title"] = tag.Name
 	ctx["IsTagView"] = true
 	ctx["Tag"] = tag
 
 	return renderTemplate(w, "url-index", ctx)
 }
 
-type ConfigSchema struct {
-	Email       string `schema:"email"`
-	Password    string `schema:"password"`
-	Visibility  string `schema:"visibility"`
-	EmbedPhotos bool   `schema:"embedphotos"`
-	EmbedVideos bool   `schema:"embedvideos"`
-}
-
 func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error {
-	if a.applicationConfigured() {
+	if applicationConfigured() {
 		http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	}
 
@@ -336,23 +299,23 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	cschema := &ConfigSchema{}
+	opts := data.InitializeInstanceOptions{}
 	decoder := schema.NewDecoder()
 
-	if err := decoder.Decode(cschema, r.PostForm); err != nil {
+	if err := decoder.Decode(&opts, r.PostForm); err != nil {
 		return err
 	}
 
 	formErrors := []string{}
 
-	if !govalidator.IsEmail(cschema.Email) {
-		if cschema.Email == "" {
+	if !govalidator.IsEmail(opts.Email) {
+		if opts.Email == "" {
 			formErrors = append(formErrors, "Email cannot be blank")
 		} else {
-			formErrors = append(formErrors, fmt.Sprintf("%s is not a valid email address", cschema.Email))
+			formErrors = append(formErrors, fmt.Sprintf("%s is not a valid email address", opts.Email))
 		}
 	}
-	if cschema.Password == "" {
+	if opts.Password == "" {
 		formErrors = append(formErrors, "Password cannot be blank")
 	}
 	if len(formErrors) > 0 {
@@ -363,21 +326,33 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 		http.Redirect(w, r, reverse("config"), http.StatusSeeOther)
 	}
 
-	user := User{}
-	user.Email = cschema.Email
-	passwordCrypt, err := bcrypt.GenerateFromPassword([]byte(cschema.Password), 0)
+	passwordCrypt, err := bcrypt.GenerateFromPassword([]byte(opts.Password), 0)
 	if err != nil {
 		return err
 	}
-	user.Password = string(passwordCrypt)
+	opts.Password = string(passwordCrypt)
 
-	settings := Settings{}
-	settings.Visibility = cschema.Visibility
-	settings.EmbedPhotos = cschema.EmbedPhotos
-	settings.EmbedVideos = cschema.EmbedVideos
+	userOpts := data.UserOptions{
+		Email:    opts.Email,
+		Password: opts.Password,
+	}
 
-	user.Save()
-	settings.Save()
+	user, err := data.CreateUser(userOpts)
+	if err != nil {
+		return err
+	}
+
+	settingsOpts := data.SettingsOptions{
+		Private:     opts.Private,
+		EmbedVideos: opts.EmbedVideos,
+		EmbedPhotos: opts.EmbedPhotos,
+		PerPage:     opts.PerPage,
+	}
+
+	_, err = data.SaveSettings(settingsOpts)
+	if err != nil {
+		return err
+	}
 
 	authsession, err := store.Get(r, "auth")
 	authsession.Values["userID"] = user.ID
@@ -386,11 +361,6 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 	// Otherwise things are good
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	return nil
-}
-
-type LoginSchema struct {
-	Email    string `schema:"email"`
-	Password string `schema:"password"`
 }
 
 func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
@@ -409,25 +379,27 @@ func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	lschema := &LoginSchema{}
+	opts := data.UserOptions{}
 	decoder := schema.NewDecoder()
 
-	if err := decoder.Decode(lschema, r.PostForm); err != nil {
+	if err := decoder.Decode(&opts, r.PostForm); err != nil {
 		return err
 	}
 
 	formErrors := []string{}
 
-	if !govalidator.IsEmail(lschema.Email) {
-		if lschema.Email == "" {
+	if !govalidator.IsEmail(opts.Email) {
+		if opts.Email == "" {
 			formErrors = append(formErrors, "Email cannot be blank")
 		} else {
-			formErrors = append(formErrors, fmt.Sprintf("%s is not a valid email address", lschema.Email))
+			formErrors = append(formErrors, fmt.Sprintf("%s is not a valid email address", opts.Email))
 		}
 	}
-	if lschema.Password == "" {
+
+	if opts.Password == "" {
 		formErrors = append(formErrors, "Password cannot be blank")
 	}
+
 	if len(formErrors) > 0 {
 		for _, msg := range formErrors {
 			session.AddFlash(msg, "danger")
@@ -437,14 +409,14 @@ func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	userbytes, err := a.db.Get(uint64(1), config.BucketNameUser)
+	user, err := data.GetUser()
 	if err != nil {
-		formErrors = append(formErrors, "Email and password did not match")
+		return err
 	}
 
-	user := DeserializeUser(userbytes)
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(lschema.Password)); err != nil {
+	if user.Email != opts.Email {
+		formErrors = append(formErrors, "Email and password did not match")
+	} else if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(opts.Password)); err != nil {
 		formErrors = append(formErrors, "Email and password did not match")
 	}
 
@@ -464,7 +436,10 @@ func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	authsession.Values["userID"] = user.ID
-	authsession.Save(r, w)
+	err = authsession.Save(r, w)
+	if err != nil {
+		return errors.Wrap(err, "failed to save auth session")
+	}
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	return nil
@@ -475,21 +450,24 @@ func (a *Sufr) logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	session.Values["userID"] = 0
+
+	delete(session.Values, "userID")
 	session.Save(r, w)
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
+
 	return nil
 }
 
 func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := context.Get(r, TemplateContext).(map[string]interface{})
 	ctx["Title"] = "Settings"
-	val, err := a.db.Get(uint64(1), config.BucketNameRoot)
+
+	settings, err := data.GetSettings()
 	if err != nil {
 		return err
 	}
-	settings := DeserializeSettings(val)
+
 	if r.Method == "GET" {
 		ctx["SettingsObject"] = settings
 		return renderTemplate(w, "settings", ctx)
@@ -499,27 +477,32 @@ func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	cschema := &ConfigSchema{}
+	opts := data.SettingsOptions{}
 	decoder := schema.NewDecoder()
 
-	if err := decoder.Decode(cschema, r.PostForm); err != nil {
+	if err := decoder.Decode(&opts, r.PostForm); err != nil {
 		return err
 	}
-
-	settings.Visibility = cschema.Visibility
-	settings.EmbedPhotos = cschema.EmbedPhotos
-	settings.EmbedVideos = cschema.EmbedVideos
-
-	settings.Save()
 
 	session, err := store.Get(r, "flashes")
 	if err != nil {
 		return err
 	}
 
+	settings, err = data.SaveSettings(opts)
+	if err != nil {
+		session.AddFlash("There was an error saving your settings", "danger")
+		session.Save(r, w)
+
+		http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+
+		return nil
+	}
+
 	session.AddFlash("Settings have been saved", "success")
 	session.Save(r, w)
 
 	http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+
 	return nil
 }

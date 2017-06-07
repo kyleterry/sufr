@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -25,6 +24,8 @@ const (
 )
 
 var (
+	SUFRUserAgent = fmt.Sprintf("Linux:SUFR:v%s", Version)
+
 	ApplicationBind string
 	BuildTime       string
 	BuildGitHash    string
@@ -34,9 +35,6 @@ var (
 	StaticDir       string
 	RootDir         string
 	Debug           bool
-
-	ErrDatabaseAlreadyOpen = errors.New("Database is already open")
-	ErrKeyNotFound         = errors.New("Key doesn't exist in DB")
 )
 
 func New() {
