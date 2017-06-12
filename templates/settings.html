@@ -70,6 +70,19 @@
           <span class="help-block">Embedding content will allow pictures and videos to be visible in your SUFR feed.</span>
         </div>
       </div>
+
+      <div class="form-group">
+        <label class="col-xs-12 col-md-2 control-label">Items Per Page</label>
+        <div class="col-xs-11 col-md-10">
+          <select class="form-control" name="perpage" required>
+            <option value="40" {{ if eq .Settings.PerPage 40 }}selected{{ end }} >40</option>
+            <option value="60" {{ if eq .Settings.PerPage 60 }}selected{{ end }} >60</option>
+            <option value="100" {{ if eq .Settings.PerPage 100 }}selected{{ end }} >100</option>
+          </select>
+          <span class="help-block">Items to display per page</span>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="col-xs-12 col-md-2 control-label">Database</label>
         <div class="col-xs-11 col-md-10">
