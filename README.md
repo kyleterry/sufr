@@ -5,6 +5,8 @@ it is a self-hosted URL bookmarker. Checkout my personal copy http://sufr.kylete
 
 There are some [screenshots](./screenshots) in the repo.
 
+[![Build Status](https://travis-ci.org/kyleterry/sufr.svg?branch=master)](https://travis-ci.org/kyleterry/sufr)
+
 ## Install
 * Clone or `go get github.com/kyleterry/sufr` into your `$GOPATH`
 * `cd ${GOPATH}/src/github.com/kyleterry/sufr`
