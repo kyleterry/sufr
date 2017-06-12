@@ -26,6 +26,12 @@
   revision = "e9cf4fae01b5a8ff89d0ec6b32f0d9c9f79aefdd"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/elazarl/go-bindata-assetfs"
   packages = ["."]
@@ -38,10 +44,10 @@
   revision = "6a5e28554805e78ea6141142aba763936c4761c0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/gorilla/context"
   packages = ["."]
-  revision = "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
+  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+  version = "v1.1"
 
 [[projects]]
   name = "github.com/gorilla/handlers"
@@ -59,7 +65,7 @@
   branch = "master"
   name = "github.com/gorilla/schema"
   packages = ["."]
-  revision = "1c72d033473165ade8a126ba64180d76a9212dcd"
+  revision = "ca549c5484735df6c48ad233575acc79908c5510"
 
 [[projects]]
   name = "github.com/gorilla/securecookie"
@@ -92,6 +98,18 @@
   revision = "c605e284fe17294bda444b34710735b29d1a9d90"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
+  version = "v1.1.4"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["bcrypt","blowfish"]
@@ -101,17 +119,17 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom"]
-  revision = "59a0b19b5533c7977ddeb86b017bf507ed407b12"
+  revision = "1a68b1313cf4ad7778376e82641197b60c02f65c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "b90f89a1e7a9c1f6b918820b3daa7f08488c8594"
+  revision = "0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "89804d56e85e791aa8c22f46ba608ee951dd1a43f24bae76b5a995e51c79c7f7"
+  inputs-digest = "b1f23ef679a928f129fc3d4c8bd6454d705f921fcb337a18e0cfa7cf39c9a508"
   solver-name = "gps-cdcl"
   solver-version = 1

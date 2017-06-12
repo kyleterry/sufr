@@ -1,17 +1,19 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/google/uuid"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
+	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -21,45 +23,78 @@ var staticHandler = http.FileServer(
 	&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo},
 )
 
-func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	urls, err := data.GetURLs()
-	if err != nil {
-		return err
+func page(r *http.Request) int {
+	pagestr := r.URL.Query().Get("page")
+	if pagestr == "" {
+		pagestr = "1"
 	}
 
-	// TODO: do pagination for urls
-	// urlCount, err := a.db.BucketLength(config.BucketNameURL)
-	// if err != nil {
-	// 	return err
-	// }
+	page, err := strconv.ParseInt(pagestr, 10, 64)
+	if err != nil {
+		return 0
+	}
 
-	// pagestr := r.URL.Query().Get("page")
-	// if pagestr == "" {
-	// 	pagestr = "1"
-	// }
-	// page, err := strconv.ParseInt(pagestr, 10, 64)
-	// if err != nil {
-	// 	return err
-	// }
+	return int(page)
+}
 
-	// paginator := NewPaginator(urlCount, int(page), config.DefaultPerPage)
-	// rawbytes, err := paginator.GetObjects(config.BucketNameURL)
-	// if err != nil {
-	// 	return err
-	// }
+func perPage(r *http.Request) int {
+	settings, ok := r.Context().Value(settingsKey).(map[string]interface{})
+	if !ok {
+		return config.DefaultPerPage
+	}
 
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Count"] = len(urls)
-	ctx["URLs"] = urls
-	// ctx["Paginator"] = paginator
+	per, ok := settings["PerPage"].(int)
+	if !ok {
+		return config.DefaultPerPage
+	}
 
-	return renderTemplate(w, "url-index", ctx)
+	return per
+}
+
+func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), data.AllURLGetter{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get paginator")
+	}
+
+	ctx := r.Context()
+
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Count"] = len(paginator.URLs)
+	templateData["URLs"] = paginator.URLs
+	templateData["Paginator"] = paginator
+
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-index")
+}
+
+func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error {
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), data.FavURLGetter{})
+	if err != nil {
+		return errors.Wrap(err, "failed to get paginator")
+	}
+
+	ctx := r.Context()
+
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Count"] = len(paginator.URLs)
+	templateData["URLs"] = paginator.URLs
+	templateData["Paginator"] = paginator
+	templateData["Title"] = "Favorites"
+
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-index")
 }
 
 func (a *Sufr) urlNewHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Title"] = "Add a URL"
-	return renderTemplate(w, "url-new", ctx)
+	ctx := r.Context()
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Title"] = "Add a URL"
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-new")
 }
 
 func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
@@ -75,10 +110,10 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// session, err := store.Get(r, "flashes")
-	// if err != nil {
-	// 	return err
-	// }
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		return err
+	}
 
 	// if !govalidator.IsURL(createURLOptions.URL) {
 	// 	errormessage := "URL is required"
@@ -94,8 +129,16 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 
 	// TODO: make and check for a validation error
 	// session.FlashValidationError(err)
-	url, err := data.CreateURL(createURLOptions)
+	url, err := data.CreateURL(createURLOptions, data.HTTPMetadataFetcher{})
 	if err != nil {
+		if errors.Cause(err) == data.ErrDuplicateKey {
+			session.AddFlash("URL already exists", "danger")
+			if err := session.Save(r, w); err != nil {
+				return err
+			}
+			http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
+			return nil
+		}
 		return err
 	}
 
@@ -115,7 +158,7 @@ func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
-			return renderTemplate(w, "404", nil)
+			return renderTemplate(w, r, "404")
 		}
 
 		return errors.Wrap(err, "failed to get url")
@@ -123,13 +166,16 @@ func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 
 	if !loggedIn(r) && url.Private {
 		w.WriteHeader(404)
-		return renderTemplate(w, "404", nil)
+		return renderTemplate(w, r, "404")
 	}
 
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["URL"] = url
+	ctx := r.Context()
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["URL"] = url
 
-	return renderTemplate(w, "url-view", ctx)
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-view")
 }
 
 func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
@@ -145,7 +191,7 @@ func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
-			return renderTemplate(w, "404", nil)
+			return renderTemplate(w, r, "404")
 		}
 
 		return errors.Wrap(err, "failed to get url")
@@ -183,17 +229,19 @@ func (a *Sufr) urlEditHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
-			return renderTemplate(w, "404", nil)
+			return renderTemplate(w, r, "404")
 		}
 
 		return errors.Wrap(err, "failed to get url")
 	}
 
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["URL"] = url
-	ctx["Title"] = fmt.Sprintf("Editing %s", url.URL)
+	ctx := r.Context()
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["URL"] = url
+	templateData["Title"] = fmt.Sprintf("Editing %s", url.URL)
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
 
-	return renderTemplate(w, "url-edit", ctx)
+	return renderTemplate(w, r.WithContext(ctx), "url-edit")
 }
 
 func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
@@ -220,7 +268,7 @@ func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
-			return renderTemplate(w, "404", nil)
+			return renderTemplate(w, r, "404")
 		}
 
 		return errors.Wrap(err, "failed to get url")
@@ -241,7 +289,7 @@ func (a *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
-			return renderTemplate(w, "404", nil)
+			return renderTemplate(w, r, "404")
 		}
 
 		return errors.Wrap(err, "failed to get url")
@@ -269,14 +317,28 @@ func (a *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["URLs"] = tag.URLs
-	ctx["Count"] = len(tag.URLs)
-	ctx["Title"] = tag.Name
-	ctx["IsTagView"] = true
-	ctx["Tag"] = tag
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), tag)
+	if err != nil {
+		return errors.Wrap(err, "failed to get paginator")
+	}
 
-	return renderTemplate(w, "url-index", ctx)
+	ctx := r.Context()
+
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["URLs"] = paginator.URLs
+	templateData["Count"] = len(paginator.URLs)
+	templateData["Paginator"] = paginator
+	templateData["Title"] = tag.Name
+	templateData["IsTagView"] = true
+	templateData["Tag"] = tag
+
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-index")
+}
+
+func (a *Sufr) PinTagHandler(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error {
@@ -284,10 +346,13 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 		http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 	}
 
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Title"] = "Setup"
+	ctx := r.Context()
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Title"] = "Setup"
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
 	if r.Method == "GET" {
-		return renderTemplate(w, "registration", ctx)
+		return renderTemplate(w, r.WithContext(ctx), "registration")
 	}
 
 	session, err := store.Get(r, "flashes")
@@ -355,8 +420,17 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 	}
 
 	authsession, err := store.Get(r, "auth")
-	authsession.Values["userID"] = user.ID
-	authsession.Save(r, w)
+	if err != nil {
+		return err
+	}
+
+	id, _ := user.ID.MarshalText()
+	authsession.Values["userID"] = id
+
+	err = authsession.Save(r, w)
+	if err != nil {
+		return errors.Wrap(err, "failed to save auth session")
+	}
 
 	// Otherwise things are good
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
@@ -364,10 +438,14 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 }
 
 func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Title"] = "Login"
+	ctx := r.Context()
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Title"] = "Login"
+
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
 	if r.Method == "GET" {
-		return renderTemplate(w, "login", ctx)
+		return renderTemplate(w, r.WithContext(ctx), "login")
 	}
 
 	session, err := store.Get(r, "flashes")
@@ -435,7 +513,9 @@ func (a *Sufr) loginHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	authsession.Values["userID"] = user.ID
+	id, _ := user.ID.MarshalText()
+	authsession.Values["userID"] = id
+
 	err = authsession.Save(r, w)
 	if err != nil {
 		return errors.Wrap(err, "failed to save auth session")
@@ -452,7 +532,11 @@ func (a *Sufr) logoutHandler(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	delete(session.Values, "userID")
-	session.Save(r, w)
+
+	err = session.Save(r, w)
+	if err != nil {
+		return errors.Wrap(err, "failed to save auth session")
+	}
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 
@@ -460,17 +544,18 @@ func (a *Sufr) logoutHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
-	ctx := context.Get(r, TemplateContext).(map[string]interface{})
-	ctx["Title"] = "Settings"
-
 	settings, err := data.GetSettings()
 	if err != nil {
 		return err
 	}
 
 	if r.Method == "GET" {
-		ctx["SettingsObject"] = settings
-		return renderTemplate(w, "settings", ctx)
+		ctx := r.Context()
+		templateData := ctx.Value(templateDataKey).(map[string]interface{})
+		templateData["Title"] = "Settings"
+		templateData["SettingsObject"] = settings
+		ctx = context.WithValue(ctx, templateDataKey, templateData)
+		return renderTemplate(w, r.WithContext(ctx), "settings")
 	}
 
 	if err := r.ParseForm(); err != nil {

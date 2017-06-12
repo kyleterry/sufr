@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"sort"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -26,7 +27,9 @@ type Tag struct {
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
-func (t *Tag) addURL(url *URL, tx *bolt.Tx) error {
+// TODO: made public to help with the migration from the old db.
+// This shouldn't be like this and I would like to find a solution
+func (t *Tag) AddURL(url *URL, tx *bolt.Tx) error {
 	for _, id := range t.URLIDs {
 		if id == url.ID {
 			return nil
@@ -35,7 +38,7 @@ func (t *Tag) addURL(url *URL, tx *bolt.Tx) error {
 
 	t.URLIDs = append(t.URLIDs, url.ID)
 
-	bucket := tx.Bucket([]byte(TagBucket))
+	bucket := tx.Bucket(tagBucket)
 
 	b, err := json.Marshal(t)
 	if err != nil {
@@ -61,7 +64,7 @@ func (t *Tag) removeURL(url *URL, tx *bolt.Tx) error {
 
 	t.URLIDs = urlIDs
 
-	bucket := tx.Bucket([]byte(TagBucket))
+	bucket := tx.Bucket(tagBucket)
 
 	b, err := json.Marshal(t)
 	if err != nil {
@@ -74,6 +77,12 @@ func (t *Tag) removeURL(url *URL, tx *bolt.Tx) error {
 	}
 
 	return nil
+}
+
+// GetURLs satisfies the urlGetter interface for the URLPaginator
+func (t *Tag) GetURLs(_ *bolt.Tx) ([]*URL, error) {
+	sort.Sort(URLsByDateDesc(t.URLs))
+	return t.URLs, nil
 }
 
 func CreateTag(opts CreateTagOptions) (*Tag, error) {
@@ -112,7 +121,7 @@ func createTag(opts CreateTagOptions, tx *bolt.Tx) (*Tag, error) {
 		UpdatedAt: now,
 	}
 
-	bucket := tx.Bucket([]byte(TagBucket))
+	bucket := tx.Bucket(tagBucket)
 
 	b, err := json.Marshal(tag)
 	if err != nil {
@@ -144,6 +153,10 @@ func GetTag(id uuid.UUID) (*Tag, error) {
 				return errors.Wrap(err, "failed to get url")
 			}
 
+			if err = url.fillTags(tx); err != nil {
+				return err
+			}
+
 			tag.URLs = append(tag.URLs, url)
 		}
 
@@ -159,7 +172,7 @@ func GetTag(id uuid.UUID) (*Tag, error) {
 
 func getTag(tagID uuid.UUID, tx *bolt.Tx) (*Tag, error) {
 	var tag Tag
-	bucket := tx.Bucket([]byte(TagBucket))
+	bucket := tx.Bucket(tagBucket)
 
 	id, _ := tagID.MarshalText()
 	rawTag := bucket.Get(id)
@@ -200,7 +213,7 @@ func getOrCreateTag(name string, tx *bolt.Tx) (*Tag, bool, error) {
 func getTagByName(name string, tx *bolt.Tx) (*Tag, error) {
 	var tag *Tag
 
-	bucket := tx.Bucket([]byte(TagBucket))
+	bucket := tx.Bucket(tagBucket)
 
 	err := bucket.ForEach(func(_, v []byte) error {
 		var t Tag
@@ -226,11 +239,6 @@ func getTagByName(name string, tx *bolt.Tx) (*Tag, error) {
 	return tag, nil
 }
 
-// URLCount returns the URL count
-func (t *Tag) URLCount() int {
-	return len(t.URLIDs)
-}
-
 //TODO: support deleting tags later
 
 // func DeleteTag(tag *Tag) error {
@@ -253,7 +261,7 @@ func (t *Tag) URLCount() int {
 // }
 
 // func deleteTag(tag *Tag, tx *bolt.Tx) error {
-// 	bucket := tx.Bucket([]byte(TagBucket))
+// 	bucket := tx.Bucket(tagBucket)
 
 // 	for _, url := range tag.URLs {
 // 		if err := url.RemoveTag(tag, tx); err != nil {

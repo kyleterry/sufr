@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	stdurl "net/url"
+	"sort"
 	"strings"
 	"time"
 	"unicode"
@@ -21,6 +22,10 @@ const (
 	DefaultURLTitle = "No title (edit to change)"
 )
 
+type URLMetadataFetcher interface {
+	FetchMetadata(string) (PageMeta, error)
+}
+
 // CreateURLOptions is passed into CreateURL from the http handler to initiate a url creation
 type CreateURLOptions struct {
 	URL     string
@@ -37,10 +42,16 @@ type UpdateURLOptions struct {
 	Tags     string
 }
 
-type pageMeta struct {
-	title  string
-	status int
+type PageMeta struct {
+	Title  string
+	Status int
 }
+
+type URLsByDateDesc []*URL
+
+func (u URLsByDateDesc) Len() int           { return len(u) }
+func (u URLsByDateDesc) Swap(i, j int)      { u[i], u[j] = u[j], u[i] }
+func (u URLsByDateDesc) Less(i, j int) bool { return u[i].CreatedAt.After(u[j].CreatedAt) }
 
 // URL is the model for a url object
 type URL struct {
@@ -90,7 +101,7 @@ func (u *URL) ToggleFavorite() error {
 	err := db.bolt.Update(func(tx *bolt.Tx) error {
 		id, _ := u.ID.MarshalText()
 
-		bucket := tx.Bucket([]byte(URLBucket))
+		bucket := tx.Bucket(urlBucket)
 
 		b, err := json.Marshal(u)
 		if err != nil {
@@ -125,7 +136,7 @@ func (u *URL) fillTags(tx *bolt.Tx) error {
 	return nil
 }
 
-func CreateURL(opts CreateURLOptions) (*URL, error) {
+func CreateURL(opts CreateURLOptions, fetcher URLMetadataFetcher) (*URL, error) {
 	tx, err := db.bolt.Begin(true)
 	if err != nil {
 		return nil, err
@@ -133,7 +144,7 @@ func CreateURL(opts CreateURLOptions) (*URL, error) {
 
 	defer tx.Rollback()
 
-	url, err := createURL(opts, tx)
+	url, err := createURL(opts, fetcher, tx)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create url")
@@ -146,7 +157,7 @@ func CreateURL(opts CreateURLOptions) (*URL, error) {
 	return url, nil
 }
 
-func createURL(opts CreateURLOptions, tx *bolt.Tx) (*URL, error) {
+func createURL(opts CreateURLOptions, fetcher URLMetadataFetcher, tx *bolt.Tx) (*URL, error) {
 	if _, err := stdurl.Parse(opts.URL); err != nil {
 		return nil, errors.Wrap(err, "failed to parse url")
 	}
@@ -155,13 +166,13 @@ func createURL(opts CreateURLOptions, tx *bolt.Tx) (*URL, error) {
 		return nil, ErrDuplicateKey
 	}
 
-	pm, err := getPageMeta(opts.URL)
+	pm, err := fetcher.FetchMetadata(opts.URL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch page")
 	}
 
-	if pm.title == "" {
-		pm.title = DefaultURLTitle
+	if pm.Title == "" {
+		pm.Title = DefaultURLTitle
 	}
 
 	now := time.Now()
@@ -169,8 +180,8 @@ func createURL(opts CreateURLOptions, tx *bolt.Tx) (*URL, error) {
 	url := &URL{
 		ID:         uuid.New(),
 		URL:        opts.URL,
-		Title:      pm.title,
-		StatusCode: pm.status,
+		Title:      pm.Title,
+		StatusCode: pm.Status,
 		CreatedAt:  now,
 		UpdatedAt:  now,
 		TagIDs:     []uuid.UUID{},
@@ -187,12 +198,12 @@ func createURL(opts CreateURLOptions, tx *bolt.Tx) (*URL, error) {
 
 		url.TagIDs = append(url.TagIDs, tag.ID)
 
-		if err := tag.addURL(url, tx); err != nil {
+		if err := tag.AddURL(url, tx); err != nil {
 			return nil, errors.Wrap(err, "failed to add url to tag")
 		}
 	}
 
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	b, err := json.Marshal(url)
 	if err != nil {
@@ -275,14 +286,14 @@ func updateURL(opts UpdateURLOptions, tx *bolt.Tx) (*URL, error) {
 	for _, new := range newTags {
 		url.Tags = append(url.Tags, new)
 		url.TagIDs = append(url.TagIDs, new.ID)
-		if err := new.addURL(url, tx); err != nil {
+		if err := new.AddURL(url, tx); err != nil {
 			return nil, errors.Wrap(err, "failed to add url to tag")
 		}
 	}
 
 	url.UpdatedAt = time.Now()
 
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	b, err := json.Marshal(url)
 	if err != nil {
@@ -317,7 +328,7 @@ func DeleteURL(url *URL) error {
 }
 
 func deleteURL(url *URL, tx *bolt.Tx) error {
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	for _, tag := range url.Tags {
 		if err := tag.removeURL(url, tx); err != nil {
@@ -333,6 +344,7 @@ func deleteURL(url *URL, tx *bolt.Tx) error {
 	return nil
 }
 
+// GetURLs will return a slice of *URL sorted by URL.CreatedAt desc
 func GetURLs() ([]*URL, error) {
 	var urls []*URL
 	err := db.bolt.View(func(tx *bolt.Tx) error {
@@ -343,11 +355,11 @@ func GetURLs() ([]*URL, error) {
 			return err
 		}
 
-		for _, url := range urls {
-			if err := url.fillTags(tx); err != nil {
-				return errors.Wrap(err, "failed to fill tags")
-			}
-		}
+		// for _, url := range urls {
+		// 	if err := url.fillTags(tx); err != nil {
+		// 		return errors.Wrap(err, "failed to fill tags")
+		// 	}
+		// }
 
 		return nil
 	})
@@ -361,7 +373,7 @@ func GetURLs() ([]*URL, error) {
 
 func getURLs(tx *bolt.Tx) ([]*URL, error) {
 	var urls []*URL
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	bucket.ForEach(func(_, v []byte) error {
 		url := URL{}
@@ -369,10 +381,42 @@ func getURLs(tx *bolt.Tx) ([]*URL, error) {
 			return err
 		}
 
+		if err := url.fillTags(tx); err != nil {
+			return errors.Wrap(err, "failed to fill tags")
+		}
+
 		urls = append(urls, &url)
 
 		return nil
 	})
+
+	sort.Sort(URLsByDateDesc(urls))
+
+	return urls, nil
+}
+
+func getFavoriteURLs(tx *bolt.Tx) ([]*URL, error) {
+	var urls []*URL
+	bucket := tx.Bucket(urlBucket)
+
+	bucket.ForEach(func(_, v []byte) error {
+		url := URL{}
+		if err := json.Unmarshal(v, &url); err != nil {
+			return err
+		}
+
+		if err := url.fillTags(tx); err != nil {
+			return errors.Wrap(err, "failed to fill tags")
+		}
+
+		if url.Favorite {
+			urls = append(urls, &url)
+		}
+
+		return nil
+	})
+
+	sort.Sort(URLsByDateDesc(urls))
 
 	return urls, nil
 }
@@ -400,7 +444,7 @@ func GetURL(id uuid.UUID) (*URL, error) {
 
 func getURL(urlID uuid.UUID, tx *bolt.Tx) (*URL, error) {
 	var url URL
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	id, _ := urlID.MarshalText()
 	rawURL := bucket.Get(id)
@@ -447,7 +491,7 @@ func GetURLByURL(urlstr string) (*URL, error) {
 
 func getURLByURL(urlstr string, tx *bolt.Tx) (*URL, error) {
 	var url *URL
-	bucket := tx.Bucket([]byte(URLBucket))
+	bucket := tx.Bucket(urlBucket)
 
 	err := bucket.ForEach(func(_, v []byte) error {
 		var u URL
@@ -469,6 +513,22 @@ func getURLByURL(urlstr string, tx *bolt.Tx) (*URL, error) {
 	return url, nil
 }
 
+func getURLCount(tx *bolt.Tx) (int, error) {
+	var i int
+
+	bucket := tx.Bucket(urlBucket)
+
+	err := bucket.ForEach(func(k, _ []byte) error {
+		i++
+		return nil
+	})
+	if err != nil {
+		return 0, errors.Wrap(err, "transaction failed")
+	}
+
+	return i, nil
+}
+
 // takes a string like "computer-science interesting books" and turns it into []string{""computer-science", "interesting", "books"}
 func parseTags(tagsstring string) []string {
 	return strings.FieldsFunc(tagsstring, func(c rune) bool {
@@ -476,9 +536,11 @@ func parseTags(tagsstring string) []string {
 	})
 }
 
+type HTTPMetadataFetcher struct{}
+
 // Returns the page title or an error. If there is an error, the url is returned as well.
-func getPageMeta(url string) (pageMeta, error) {
-	var pm pageMeta
+func (HTTPMetadataFetcher) FetchMetadata(url string) (PageMeta, error) {
+	var pm PageMeta
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
@@ -495,7 +557,7 @@ func getPageMeta(url string) (pageMeta, error) {
 
 	defer res.Body.Close()
 
-	pm.status = res.StatusCode
+	pm.Status = res.StatusCode
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 
@@ -503,6 +565,6 @@ func getPageMeta(url string) (pageMeta, error) {
 		return pm, err
 	}
 
-	pm.title = doc.Find("title").Text()
+	pm.Title = doc.Find("title").Text()
 	return pm, nil
 }

@@ -43,19 +43,19 @@
       {{ end }}
 
       {{ if .URL.HasTags }}
-      <i class="fa fa-tag"></i> {{ range $tag := .URL.Tags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
+      tagged: {{ range $tag := .URL.Tags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
       {{ end }}
 
       <div class="url-actions">
         <span class="hidden">
-          {{ if .URL.Favorite }}
-          <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart"></i></a>
-          {{ else }}
-          <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart-o"></i></a>
-          {{ end }}
-          <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}"><i class="fa fa-pencil"></i></a>
           {{ if .LoggedIn }}
-          <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
+            {{ if .URL.Favorite }}
+            <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart"></i></a>
+            {{ else }}
+            <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart-o"></i></a>
+            {{ end }}
+            <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}"><i class="fa fa-pencil"></i></a>
+            <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
           {{ end }}
         </span>
       </div>
@@ -140,13 +140,6 @@
           <a class="pull-left logo" href="{{ reverse "url-index" }}"><img height="38" src="/static/images/sufr-logo.svg" alt="SUFR logo"></a>
         </div>
         <div class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            {{ $active := .ActiveTab }}
-            <!--
-              <li><a href="#"><i class="fa fa-dashboard"></i></a></li>
-              no dashboard yet -->
-              <!-- <li {{if eq $active "urls"}}class="active"{{end}}><a href="/"><i class="fa fa-list-alt"></i></a></li> -->
-          </ul>
           <ul class="nav navbar-nav navbar-right">
             {{ if .LoggedIn }}
             <li><a href="{{ reverse "url-new" }}"><i class="fa fa-plus"></i> Add URL</a></li>
@@ -167,12 +160,22 @@
       </div>
     </div>
     <div class="container" id="content">
-      <div class="col-xs-12">
-        {{ if .Title }}
-        <p class="lead text-muted always-wrap">{{.Title}}</p>
-        {{ end }}
-        {{ template "flash" . }}
-        {{ template "content" . }}
+      <div class="row">
+        <div class="col-md-3">
+          <ul class="nav nav-pills nav-stacked">
+            <li><a href="{{ reverse "url-favorites" }}"><i class="fa fa-heart"></i> Favorites</a></li>
+            {{ range $tag := .PinnedTags }}
+            <li><a href="{{ reverse "tag-view" "id" $tag.Tag.ID }}">{{ $tag.Tag.Name }}</a></li>
+            {{ end }}
+          </ul>
+        </div>
+        <div class="col-xs-12 col-md-9">
+          {{ if .Title }}
+          <p class="lead text-muted always-wrap">{{.Title}}</p>
+          {{ end }}
+          {{ template "flash" . }}
+          {{ template "content" . }}
+        </div>
       </div>
     </div>
     <footer class="footer">

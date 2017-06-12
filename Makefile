@@ -25,4 +25,7 @@ install:
 vendor-get:
 	go get -u -v github.com/jteeuwen/go-bindata/...
 
+test:
+	go test -v $(shell go list ./... | grep -v vendor)
+
 .PHONY: all clean build cross-compile generate install vendor-get

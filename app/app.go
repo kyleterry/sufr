@@ -1,7 +1,7 @@
 package app
 
 import (
-	"encoding/gob"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/justinas/alice"
@@ -18,18 +17,27 @@ import (
 	"github.com/pkg/errors"
 )
 
-func init() {
-	gob.Register(uuid.UUID{})
-}
-
 var (
 	router = mux.NewRouter()
 	store  = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 )
 
-type templatecontext int
+// Context key types so we don't clobber the global context store
+type ctxKeyTemplateData int
+type ctxKeyUser int
+type ctxKeyFlashes int
+type ctxKeyLoggedIn int
+type ctxKeySettings int
+type ctxKeyPinnedTags int
 
-const TemplateContext templatecontext = 0
+const (
+	templateDataKey ctxKeyTemplateData = 0
+	userKey         ctxKeyUser         = 0
+	flashesKey      ctxKeyFlashes      = 0
+	loggedInKey     ctxKeyLoggedIn     = 0
+	settingsKey     ctxKeySettings     = 0
+	pinnedTagsKey   ctxKeyPinnedTags   = 0
+)
 
 type errorHandler func(http.ResponseWriter, *http.Request) error
 
@@ -48,12 +56,11 @@ type Sufr struct {
 
 // New created a new pointer to Sufr
 func New() *Sufr {
-	log.Println("Creating new Sufr instance")
 	app := &Sufr{}
 
 	// Wrapped middlware
-	all := alice.New(app.SetSettingsHandler, app.SetLoggedInHandler, app.SetActiveTabHandler, LoggingHandler)
-	auth := alice.New(app.AuthHandler)
+	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)
+	auth := alice.New(AuthHandler)
 	auth = auth.Extend(all)
 
 	const idPattern = "{id:(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}"
@@ -75,6 +82,10 @@ func New() *Sufr {
 		Name("url-index")
 
 	urlrouter := router.PathPrefix("/url").Subrouter()
+
+	urlrouter.Handle("/favorites", all.Then(errorHandler(app.urlFavoritesHandler))).
+		Methods("GET").
+		Name("url-favorites")
 
 	urlrouter.Handle("/new", auth.Then(errorHandler(app.urlNewHandler))).
 		Methods("GET").
@@ -122,26 +133,29 @@ func New() *Sufr {
 
 	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusNotFound)
-		return renderTemplate(w, "404", nil)
+		return renderTemplate(w, r, "404")
 	})
 
 	return app
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := make(map[string]interface{})
-	flashes := make(map[string][]interface{})
 	session, err := store.Get(r, "flashes")
 	if err != nil {
 		log.Println(err)
 	}
+
+	flashes := make(map[string][]interface{})
 	flashes["danger"] = session.Flashes("danger")
 	flashes["success"] = session.Flashes("success")
 	flashes["warning"] = session.Flashes("warning")
-	ctx["Flashes"] = flashes
-	session.Save(r, w)
 
-	context.Set(r, TemplateContext, ctx)
+	ctx := context.WithValue(r.Context(), flashesKey, flashes)
+	ctx = context.WithValue(ctx, templateDataKey, make(map[string]interface{}))
+
+	r = r.WithContext(ctx)
+
+	session.Save(r, w)
 
 	// Have we configured?
 	if !applicationConfigured() {
@@ -217,7 +231,7 @@ func instancePrivate() bool {
 }
 
 func loggedIn(r *http.Request) bool {
-	session, err := store.Get(r, "auth")
+	session, err := store.New(r, "auth")
 	if err != nil {
 		panic(err)
 	}
@@ -227,7 +241,7 @@ func loggedIn(r *http.Request) bool {
 		return false
 	}
 
-	id := val.(uuid.UUID)
+	id, err := uuid.ParseBytes(val.([]byte))
 	if err != nil {
 		return false
 	}
@@ -263,7 +277,9 @@ func isImgur(url string) bool {
 }
 
 // Will match things like FyCch, FyCch.jpg and so on so we can embed raw image links too
-var imgurRE = regexp.MustCompile(`^(.{5})\.?[a-zA-z]*$`)
+// Looks for an id of 3 to 8 chars long.
+// TODO: Look at the Imgur API to confirm this :^)
+var imgurRE = regexp.MustCompile(`^(?P<id>([a-zA-Z0-9]{3,8}))\.?[a-zA-z]*$`)
 
 func imgurgal(gal string) string {
 	u, _ := url.Parse(gal)
@@ -274,9 +290,9 @@ func imgurgal(gal string) string {
 			parts[0] = "a"
 		}
 	} else {
-		b := imgurRE.Find([]byte(parts[0]))
-		if len(b) > 0 {
-			parts[0] = string(b)
+		match := imgurRE.FindStringSubmatch(parts[0])
+		if len(match) > 1 {
+			parts[0] = match[1]
 		}
 	}
 

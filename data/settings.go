@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/kyleterry/sufr/config"
 	"github.com/pkg/errors"
 )
 
 var ErrSettingsExists = errors.New("settings object already exists")
-
-const AppBucket = "_app"
 
 type InitializeInstanceOptions struct {
 	Email       string `schema:"email"`
@@ -59,15 +58,20 @@ func SaveSettings(opts SettingsOptions) (*Settings, error) {
 }
 
 func saveSettings(opts SettingsOptions, tx *bolt.Tx) (*Settings, error) {
-	bucket := tx.Bucket([]byte(AppBucket))
+	bucket := tx.Bucket(appBucket)
 
 	now := time.Now()
+
+	perPage := opts.PerPage
+	if perPage == 0 {
+		perPage = config.DefaultPerPage
+	}
 
 	settings := &Settings{
 		Private:     opts.Private,
 		EmbedVideos: opts.EmbedVideos,
 		EmbedPhotos: opts.EmbedPhotos,
-		PerPage:     opts.PerPage,
+		PerPage:     perPage,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -107,7 +111,7 @@ func GetSettings() (*Settings, error) {
 
 func getSettings(tx *bolt.Tx) (*Settings, error) {
 	var settings Settings
-	bucket := tx.Bucket([]byte(AppBucket))
+	bucket := tx.Bucket(appBucket)
 
 	rawSettings := bucket.Get([]byte("settings"))
 	if len(rawSettings) == 0 {

@@ -23,10 +23,18 @@ var (
 	ErrDuplicateKey        = errors.New("duplicate key")
 )
 
+var (
+	appBucket = []byte("_app")
+	urlBucket = []byte("_urls")
+	tagBucket = []byte("_tags")
+)
+
 // SufrDB is a BoltDB wrapper that provides a SUFR specific interface to the DB
 type SufrDB struct {
 	path string
 	bolt *bolt.DB
+
+	sync.Mutex
 }
 
 func MustInit() {
@@ -38,6 +46,30 @@ func MustInit() {
 			panic(errors.Wrap(err, "failed to open database"))
 		}
 	})
+}
+
+// DBWithLock runs func fn with the global db object. Locked so nothing else can use
+// the DB while migrations are running.
+func DBWithLock(fn func(*bolt.DB)) {
+	db.Lock()
+	defer db.Unlock()
+	fn(db.bolt)
+}
+
+// RunWithBucketForType takes a *bolt.Tx and will find the bucket for type m
+// and then run will run the func fn with the bucket (if found). If no bucket is
+// registered for type m, an error is returned.
+func RunWithBucketForType(tx *bolt.Tx, m interface{}, fn func(*bolt.Bucket) error) error {
+	switch m.(type) {
+	case URL:
+		return fn(tx.Bucket(urlBucket))
+	case Tag:
+		return fn(tx.Bucket(tagBucket))
+	case Settings, PinnedTag, PinnedTags, User:
+		return fn(tx.Bucket(appBucket))
+	}
+
+	return errors.Errorf("no such bucket for type %v", m)
 }
 
 // New creates and returns a new pointer to a SufrDB struct
@@ -66,18 +98,18 @@ func (s *SufrDB) Open() error {
 	// Make sure the sufr bucket exists so we can use it later
 	err = s.bolt.Update(func(tx *bolt.Tx) error {
 		// TODO better logging
-		log.Println("Creating database buckets")
-		_, err := tx.CreateBucketIfNotExists([]byte(AppBucket))
+		log.Println("initializing database")
+		_, err := tx.CreateBucketIfNotExists(appBucket)
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.CreateBucketIfNotExists([]byte(URLBucket))
+		_, err = tx.CreateBucketIfNotExists(urlBucket)
 		if err != nil {
 			return err
 		}
 
-		_, err = tx.CreateBucketIfNotExists([]byte(TagBucket))
+		_, err = tx.CreateBucketIfNotExists(tagBucket)
 		if err != nil {
 			return err
 		}
@@ -107,60 +139,6 @@ func (s *SufrDB) Statsdumper() {
 		json.NewEncoder(os.Stderr).Encode(diff)
 		prev = stats
 	}
-}
-
-func (s *SufrDB) GetSubset(offset uint64, n uint64, bucket string) ([][]byte, error) {
-	items := [][]byte{}
-	err := s.bolt.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(config.BucketNameRoot))
-		if bucket != config.BucketNameRoot {
-			b = b.Bucket([]byte(bucket))
-		}
-
-		c := b.Cursor()
-
-		var k, v []byte
-		k, v = c.Last()
-
-		for offset > 0 {
-			k, v = c.Prev()
-			if k == nil {
-				return nil
-			}
-			offset--
-		}
-
-		if k != nil {
-			items = append(items, v)
-		}
-
-		for n-1 > 0 {
-			k, v := c.Prev()
-			if k == nil {
-				return nil
-			}
-			items = append(items, v)
-			n--
-		}
-
-		return nil
-	})
-	return items, err
-}
-
-func BucketLength(bucket string) (int, error) {
-	var count int
-	err := db.bolt.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(bucket))
-		b.ForEach(func(_, v []byte) error {
-			count++
-			return nil
-		})
-
-		return nil
-	})
-
-	return count, err
 }
 
 func BackupHandler(w http.ResponseWriter, req *http.Request) error {
