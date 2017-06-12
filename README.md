@@ -7,6 +7,21 @@ There are some [screenshots](./screenshots) in the repo.
 
 [![Build Status](https://travis-ci.org/kyleterry/sufr.svg?branch=master)](https://travis-ci.org/kyleterry/sufr)
 
+## Features
+
+* Save links, videos and image galleries and access them from any internet
+  connected device with a browser
+* Private instances - make your entire SUFR private and only accessible to you
+  if you are logged in
+* Private links - sometimes you just don't want people to see what you saved
+  even if your instance if public, so you can flag a link as private
+* Embed YouTube videos and Imgur galleries/images
+* Backup your database with a single link in settings (can be hit via curl in a
+  cron job)
+* Pin your most used tags to the sidebar
+
+I'm working on some features that are definitely important, you can find them [in my github issues](https://github.com/kyleterry/sufr/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20label%3Afeature%20).
+
 ## Install
 * Clone or `go get github.com/kyleterry/sufr` into your `$GOPATH`
 * `cd ${GOPATH}/src/github.com/kyleterry/sufr`
