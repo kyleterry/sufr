@@ -22,10 +22,10 @@
           </li>
           {{ $currentPage := .Paginator.CurrentPage }}
           {{ range $index, $page := .Paginator.Pages }}
-          <li class="page-item{{ if eq $currentPage $page }} active{{ end }}"><a class="page-link" href="{{ reverse "url-index" }}?page={{ $page }}">{{ $page }}</a></li>
+          <li class="page-item{{ if eq $currentPage $page }} active{{ end }}"><a class="page-link" href="{{ $.RequestURI }}?page={{ $page }}">{{ $page }}</a></li>
           {{ end }}
           <li class="page-item{{ if not .Paginator.HasNext }} disabled{{ end }}">
-            <a class="page-link" href="{{ reverse "url-index" }}?page={{ .Paginator.NextPage }}" aria-label="Next"{{ if not .Paginator.HasNext }}  tabindex="-1"{{ end }}>
+            <a class="page-link" href="{{ .RequestURI }}?page={{ .Paginator.NextPage }}" aria-label="Next"{{ if not .Paginator.HasNext }}  tabindex="-1"{{ end }}>
               <span aria-hidden="true">&raquo;</span>
               <span class="sr-only">Next</span>
             </a>

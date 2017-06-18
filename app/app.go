@@ -151,7 +151,9 @@ func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	flashes["warning"] = session.Flashes("warning")
 
 	ctx := context.WithValue(r.Context(), flashesKey, flashes)
-	ctx = context.WithValue(ctx, templateDataKey, make(map[string]interface{}))
+	templateData := make(map[string]interface{})
+	templateData["RequestURI"] = r.RequestURI
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
 
 	r = r.WithContext(ctx)
 
