@@ -13,7 +13,7 @@
 
       {{ if .Paginator.HasPagination }}
       <nav aria-label="...">
-        <ul class="pagination">
+        <ul class="pagination pagination-sm">
           <li class="page-item{{ if not .Paginator.HasPrevious }} disabled{{ end }}">
             <a class="page-link" href="{{ reverse "url-index" }}?page={{ .Paginator.PreviousPage }}" aria-label="Previous"{{ if not .Paginator.HasPrevious }}  tabindex="-1"{{ end }}>
               <span aria-hidden="true">&laquo;</span>

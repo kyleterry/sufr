@@ -1,6 +1,8 @@
 package data
 
 import (
+	"math"
+
 	"github.com/boltdb/bolt"
 	"github.com/pkg/errors"
 )
@@ -12,10 +14,11 @@ type urlGetter interface {
 
 // URLPaginator represents a paginated collection of URLs sorted by CreatedAt desc
 type URLPaginator struct {
-	NumRecords int
-	Page       int
-	PerPage    int
-	URLs       []*URL
+	URLs []*URL
+
+	numRecords int
+	page       int
+	perPage    int
 }
 
 // NewURLPaginator returns a filled-out *URLPaginator.
@@ -50,9 +53,9 @@ func newURLPaginator(page, perPage int, getter urlGetter, tx *bolt.Tx) (*URLPagi
 
 	count := len(urls)
 
-	p.NumRecords = count
-	p.Page = page
-	p.PerPage = perPage
+	p.numRecords = count
+	p.page = page
+	p.perPage = perPage
 
 	sub, err := p.urlSubset(urls)
 	if err != nil {
@@ -66,43 +69,45 @@ func newURLPaginator(page, perPage int, getter urlGetter, tx *bolt.Tx) (*URLPagi
 
 func (p *URLPaginator) urlSubset(urls []*URL) ([]*URL, error) {
 	var offset int
-	if p.Page > 1 {
-		offset = p.PerPage * (p.Page - 1)
+	if p.page > 1 {
+		offset = p.perPage * (p.page - 1)
 	}
 
-	end := offset + p.PerPage
-	if end > p.NumRecords {
-		end = p.NumRecords
+	end := offset + p.perPage
+	if end > p.numRecords {
+		end = p.numRecords
 	}
 
 	return urls[offset:end], nil
 }
 
-func (p URLPaginator) HasPagination() bool { return p.NumRecords > p.PerPage }
-func (p URLPaginator) TotalPages() int     { return p.NumRecords / p.PerPage }
-func (p URLPaginator) CurrentPage() int    { return p.Page }
-func (p URLPaginator) HasPrevious() bool   { return p.Page > 1 }
-func (p URLPaginator) HasNext() bool       { return p.Page < p.TotalPages() }
+func (p URLPaginator) HasPagination() bool { return p.numRecords > p.perPage }
+func (p URLPaginator) CurrentPage() int    { return p.page }
+func (p URLPaginator) HasPrevious() bool   { return p.page > 1 }
+func (p URLPaginator) HasNext() bool       { return p.page < p.TotalPages() }
 
+func (p URLPaginator) TotalPages() int {
+	return int(math.Ceil(float64(p.numRecords) / float64(p.perPage)))
+}
 func (p URLPaginator) PreviousPage() int {
-	if p.Page == 1 {
-		return p.Page
+	if p.page == 1 {
+		return p.page
 	}
-	return p.Page - 1
+	return p.page - 1
 }
 
 func (p URLPaginator) NextPage() int {
-	if p.Page == p.TotalPages() {
-		return p.Page
+	if p.page == p.TotalPages() {
+		return p.page
 	}
-	return p.Page + 1
+	return p.page + 1
 }
 
 func (p URLPaginator) Pages() []int {
 	pgs := []int{}
-	i := 1
-	for i <= p.TotalPages() {
-		pgs = append(pgs, i)
+	i := 0
+	for i < p.TotalPages() {
+		pgs = append(pgs, i+1)
 		i++
 	}
 
