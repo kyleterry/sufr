@@ -65,7 +65,7 @@
   branch = "master"
   name = "github.com/gorilla/schema"
   packages = ["."]
-  revision = "ca549c5484735df6c48ad233575acc79908c5510"
+  revision = "8b1100835db5bbdae88541510f70d114b91a7e4d"
 
 [[projects]]
   name = "github.com/gorilla/securecookie"
@@ -113,19 +113,19 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["bcrypt","blowfish"]
-  revision = "e7ba82683099cae71475961448ab8f903ea77c26"
+  revision = "850760c427c516be930bc91280636328f1a62286"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["html","html/atom"]
-  revision = "1a68b1313cf4ad7778376e82641197b60c02f65c"
+  revision = "973f3f3bbd50e92b13faa6c53ec16f49b45e851c"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79"
+  revision = "fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a"
 
 [solve-meta]
   analyzer-name = "dep"
