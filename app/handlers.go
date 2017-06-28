@@ -52,7 +52,7 @@ func perPage(r *http.Request) int {
 }
 
 func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), data.AllURLGetter{})
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.AllURLGetter{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}
@@ -70,7 +70,7 @@ func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), data.FavURLGetter{})
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.FavURLGetter{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}
@@ -317,7 +317,7 @@ func (a *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), tag)
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, tag)
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}

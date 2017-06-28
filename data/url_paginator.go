@@ -16,20 +16,21 @@ type urlGetter interface {
 type URLPaginator struct {
 	URLs []*URL
 
-	numRecords int
-	page       int
-	perPage    int
+	numRecords  int
+	page        int
+	perPage     int
+	pagePadding int
 }
 
 // NewURLPaginator returns a filled-out *URLPaginator.
 // returns an error if something during the read transaction fails.
-func NewURLPaginator(page int, perPage int, getter urlGetter) (*URLPaginator, error) {
+func NewURLPaginator(page, perPage, pagePadding int, getter urlGetter) (*URLPaginator, error) {
 	var p *URLPaginator
 
 	err := db.bolt.View(func(tx *bolt.Tx) error {
 		var err error
 
-		p, err = newURLPaginator(page, perPage, getter, tx)
+		p, err = newURLPaginator(page, perPage, pagePadding, getter, tx)
 		if err != nil {
 			return err
 		}
@@ -43,7 +44,7 @@ func NewURLPaginator(page int, perPage int, getter urlGetter) (*URLPaginator, er
 	return p, nil
 }
 
-func newURLPaginator(page, perPage int, getter urlGetter, tx *bolt.Tx) (*URLPaginator, error) {
+func newURLPaginator(page, perPage, pagePadding int, getter urlGetter, tx *bolt.Tx) (*URLPaginator, error) {
 	p := &URLPaginator{}
 
 	urls, err := getter.GetURLs(tx)
@@ -56,6 +57,7 @@ func newURLPaginator(page, perPage int, getter urlGetter, tx *bolt.Tx) (*URLPagi
 	p.numRecords = count
 	p.page = page
 	p.perPage = perPage
+	p.pagePadding = pagePadding
 
 	sub, err := p.urlSubset(urls)
 	if err != nil {
@@ -111,5 +113,26 @@ func (p URLPaginator) Pages() []int {
 		i++
 	}
 
-	return pgs
+	totalPages := p.TotalPages()
+	maxPages := (p.pagePadding * 2) + 1
+
+	var (
+		start int
+		stop  = totalPages
+	)
+
+	if totalPages > maxPages {
+		start = p.page - (p.pagePadding + 1)
+		stop = p.page + p.pagePadding
+
+		if start < 0 {
+			start = 0
+			stop = maxPages
+		} else if (totalPages - p.page) < p.pagePadding {
+			start = totalPages - maxPages
+			stop = totalPages
+		}
+	}
+
+	return pgs[start:stop]
 }

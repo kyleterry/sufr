@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -314,4 +315,18 @@ func newcontext(values ...interface{}) (map[string]interface{}, error) {
 		dict[key] = values[i+1]
 	}
 	return dict, nil
+}
+
+func updatePage(uri string, page int) (string, error) {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return "", err
+	}
+
+	q := u.Query()
+	q.Set("page", strconv.Itoa(page))
+
+	u.RawQuery = q.Encode()
+
+	return u.String(), nil
 }

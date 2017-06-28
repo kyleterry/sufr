@@ -29,6 +29,7 @@ var templateFuncs = template.FuncMap{
 	"isimgur":    isImgur,
 	"imgurgal":   imgurgal,
 	"newcontext": newcontext,
+	"updatePage": updatePage,
 }
 
 func renderTemplate(w http.ResponseWriter, r *http.Request, name string) error {

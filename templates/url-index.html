@@ -15,17 +15,17 @@
       <nav aria-label="...">
         <ul class="pagination pagination-sm">
           <li class="page-item{{ if not .Paginator.HasPrevious }} disabled{{ end }}">
-            <a class="page-link" href="{{ reverse "url-index" }}?page={{ .Paginator.PreviousPage }}" aria-label="Previous"{{ if not .Paginator.HasPrevious }}  tabindex="-1"{{ end }}>
+            <a class="page-link" href="{{ updatePage .RequestURI .Paginator.PreviousPage }}" aria-label="Previous"{{ if not .Paginator.HasPrevious }}  tabindex="-1"{{ end }}>
               <span aria-hidden="true">&laquo;</span>
               <span class="sr-only">Previous</span>
             </a>
           </li>
           {{ $currentPage := .Paginator.CurrentPage }}
           {{ range $index, $page := .Paginator.Pages }}
-          <li class="page-item{{ if eq $currentPage $page }} active{{ end }}"><a class="page-link" href="{{ $.RequestURI }}?page={{ $page }}">{{ $page }}</a></li>
+          <li class="page-item{{ if eq $currentPage $page }} active{{ end }}"><a class="page-link" href="{{ updatePage $.RequestURI $page }}">{{ $page }}</a></li>
           {{ end }}
           <li class="page-item{{ if not .Paginator.HasNext }} disabled{{ end }}">
-            <a class="page-link" href="{{ .RequestURI }}?page={{ .Paginator.NextPage }}" aria-label="Next"{{ if not .Paginator.HasNext }}  tabindex="-1"{{ end }}>
+            <a class="page-link" href="{{ updatePage .RequestURI .Paginator.NextPage }}" aria-label="Next"{{ if not .Paginator.HasNext }}  tabindex="-1"{{ end }}>
               <span aria-hidden="true">&raquo;</span>
               <span class="sr-only">Next</span>
             </a>
