@@ -178,7 +178,7 @@ func (a *Sufr) urlViewHandler(w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(w, r.WithContext(ctx), "url-view")
 }
 
-func (a *Sufr) urlFavHandler(w http.ResponseWriter, r *http.Request) error {
+func (a *Sufr) urlToggleFavoriteHandler(w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 
 	id, err := uuid.Parse(vars["id"])

@@ -2,6 +2,7 @@ package data
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	stdurl "net/url"
 	"sort"
@@ -14,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kyleterry/sufr/config"
 	"github.com/pkg/errors"
+	"github.com/russross/blackfriday"
 )
 
 // URLBucket is the name of the bucket to store URL objects in
@@ -35,11 +37,11 @@ type CreateURLOptions struct {
 
 // UpdateURLOptions is passed into UpdateURL from the http handler to update a url
 type UpdateURLOptions struct {
-	ID       uuid.UUID
-	Title    string
-	Private  bool
-	Favorite bool
-	Tags     string
+	ID      uuid.UUID
+	Title   string
+	Notes   string
+	Private bool
+	Tags    string
 }
 
 type PageMeta struct {
@@ -58,6 +60,7 @@ type URL struct {
 	ID         uuid.UUID   `json:"id"`
 	URL        string      `json:"url"`
 	Title      string      `json:"title"`
+	Notes      string      `json:"notes"`
 	StatusCode int         `json:"status_code"`
 	Private    bool        `json:"private"`
 	Favorite   bool        `json:"favorite"`
@@ -93,6 +96,10 @@ func (u *URL) GetTagsForDisplay() string {
 	}
 
 	return strings.Join(s, " ")
+}
+
+func (u *URL) NotesHTML() template.HTML {
+	return template.HTML(string(blackfriday.MarkdownCommon([]byte(u.Notes))))
 }
 
 func (u *URL) ToggleFavorite() error {
@@ -249,8 +256,9 @@ func updateURL(opts UpdateURLOptions, tx *bolt.Tx) (*URL, error) {
 		url.Title = opts.Title
 	}
 
+	url.Notes = opts.Notes
+
 	url.Private = opts.Private
-	url.Favorite = opts.Favorite
 
 	tagNames := parseTags(opts.Tags)
 

@@ -1,4 +1,68 @@
 {{ define "title" }}{{ .URL.Title }}{{ end }}
 {{ define "content" }}
-{{ template "url-partial" newcontext "URL" .URL "Settings" .Settings }}
+<div class="row">
+  <div class="col-lg-12">
+    <div class="url-container">
+
+      <h4>
+        <a href="{{ .URL.URL }}" target="_blank">{{ .URL.Title }}</a>
+      </h4>
+
+      <p class="text-muted always-wrap">
+        {{ if .URL.Private }}
+          <i class="fa fa-lock"></i>
+        {{ else }}
+          <i class="fa fa-bookmark-o"></i>
+        {{ end }}
+        <small>
+          <a href="{{ reverse "url-view" "id" .URL.ID }}">{{ .URL.FormattedCreatedAt }}</a>
+          &middot;
+          {{ .URL.URL }}
+          {{ if isyoutube .URL.URL }}&middot; <i class="fa fa-film"></i>{{ end }}
+        </small>
+      </p>
+
+      {{ if .Settings.EmbedVideos }}
+      {{ if isyoutube .URL.URL }}
+      <div class="embed-responsive embed-responsive-16by9">
+        <iframe class="embed-responsive-item" src="" data-src="//www.youtube.com/embed/{{ youtubevid .URL.URL }}" allowfullscreen></iframe>
+      </div>
+      {{ end }}
+      {{ end }}
+
+      {{ if .Settings.EmbedPhotos }}
+      {{ if isimgur .URL.URL }}
+      <div class="row">
+        <div class="col-xs-12">
+          <blockquote class="imgur-embed-pub" lang="en" data-id="{{ imgurgal .URL.URL }}">
+            <a href="//imgur.com/{{ imgurgal .URL.URL }}"></a>
+          </blockquote>
+          <script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+        </div>
+      </div>
+      {{ end }}
+      {{ end }}
+
+      {{ if .URL.HasTags }}
+      tagged: {{ range $tag := .URL.Tags }}<a href="{{ reverse "tag-view" "id" $tag.ID }}">{{ $tag.Name }}</a> {{ end }}
+      {{ end }}
+
+      {{ .URL.NotesHTML }}
+
+      <div class="url-actions">
+        <span class="hidden">
+          {{ if .LoggedIn }}
+            {{ if .URL.Favorite }}
+            <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart"></i></a>
+            {{ else }}
+            <a class="btn fav-btn" href="{{ reverse "url-fav-toggle" "id" .URL.ID }}"><i class="fa fa-heart-o"></i></a>
+            {{ end }}
+            <a class="btn" href="{{ reverse "url-edit" "id" .URL.ID }}"><i class="fa fa-pencil"></i></a>
+            <a class="btn text-danger" href="#" data-href="{{ reverse "url-delete" "id" .URL.ID }}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-trash-o"></i></a>
+          {{ end }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
 {{end}}

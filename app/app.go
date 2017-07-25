@@ -112,7 +112,7 @@ func New() *Sufr {
 	urlrouter.Handle("/"+idPattern+"/delete", auth.Then(errorHandler(app.urlDeleteHandler))).
 		Name("url-delete")
 
-	urlrouter.Handle("/"+idPattern+"/toggle-fav", auth.Then(errorHandler(app.urlFavHandler))).
+	urlrouter.Handle("/"+idPattern+"/toggle-fav", auth.Then(errorHandler(app.urlToggleFavoriteHandler))).
 		Methods("POST").
 		Name("url-fav-toggle")
 

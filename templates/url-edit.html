@@ -18,6 +18,13 @@
         <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Tags must be separated by a space</span>
       </div>
       <div class="form-group">
+        <label for="notes" class="col-xs-12 col-md-2 control-label">Notes</label>
+        <div class="col-xs-12 col-md-10">
+          <textarea id="notes" class="form-control" rows="5" name="notes" autocapitalize="none">{{ $url.Notes }}</textarea>
+        </div>
+        <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Your space. Say what you want. With Markdown.</span>
+      </div>
+      <div class="form-group">
         <label class="col-xs-12 col-md-2 control-label">Visibility</label>
         <div class="col-xs-12 col-md-10">
           <div class="checkbox">
