@@ -106,14 +106,8 @@
 [[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "cadec560ec52d93835bf2f15bd794700d3a2473b"
-  version = "v2.0.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  revision = "541ff5ee47f1dddf6a5281af78307d921524bcb5"
+  revision = "4048872b16cc0fc2c5fd9eacf0ed2c2fedaa0c8c"
+  version = "v1.5"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -142,6 +136,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "802ed0e66bbe24e8d65394c13f0163318de84ef40c8deba91bba50bb73d572ce"
+  inputs-digest = "0cbf03a94de9599fc6de1ba8d8a2fdb66a9137a6019d5929812946bffca1e38d"
   solver-name = "gps-cdcl"
   solver-version = 1
