@@ -35,6 +35,14 @@
     </div>
     <form class="form-horizontal" action="{{ reverse "settings" }}" method="POST">
       <div class="form-group">
+        <label class="col-xs-12 col-md-2 control-label">API Token</label>
+        <div class="col-xs-12 col-md-10">
+          <code>{{ $global.APIToken.String }}</code>
+          <a class="btn btn-default" href="{{ reverse "api-token-roll" }}" role="button">Roll</a>
+          <span class="help-block">API tokens are used to run things like backups with cron and eventually access the API</span>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="col-xs-12 col-md-2 control-label">Visibility</label>
         <div class="col-xs-12 col-md-10">
           <div class="radio">

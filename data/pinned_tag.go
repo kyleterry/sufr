@@ -55,7 +55,7 @@ func pinTag(tag *Tag, tx *bolt.Tx) (*PinnedTags, error) {
 		*pinnedTags = append(*pinnedTags, PinnedTag{TagID: tag.ID})
 	}
 
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	b, err := json.Marshal(pinnedTags)
 	if err != nil {
@@ -105,7 +105,7 @@ func unpinTag(tag *Tag, tx *bolt.Tx) (*PinnedTags, error) {
 		}
 	}
 
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	b, err := json.Marshal(newPinnedTags)
 	if err != nil {
@@ -142,7 +142,7 @@ func GetPinnedTags() (*PinnedTags, error) {
 func getPinnedTags(tx *bolt.Tx) (*PinnedTags, error) {
 	var pinnedTags PinnedTags
 
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	b := bucket.Get(pinnedTagsKey)
 

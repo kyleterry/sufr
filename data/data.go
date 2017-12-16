@@ -23,10 +23,22 @@ var (
 	ErrDuplicateKey        = errors.New("duplicate key")
 )
 
+type bucketKey int
+
+const (
+	appKey bucketKey = iota
+	urlKey
+	tagKey
+	apiTokenKey
+)
+
 var (
-	appBucket = []byte("_app")
-	urlBucket = []byte("_urls")
-	tagBucket = []byte("_tags")
+	buckets = map[bucketKey][]byte{
+		appKey:      []byte("_app"),
+		urlKey:      []byte("_urls"),
+		tagKey:      []byte("_tags"),
+		apiTokenKey: []byte("_api_tokens"),
+	}
 )
 
 // SufrDB is a BoltDB wrapper that provides a SUFR specific interface to the DB
@@ -60,16 +72,22 @@ func DBWithLock(fn func(*bolt.DB)) {
 // and then run will run the func fn with the bucket (if found). If no bucket is
 // registered for type m, an error is returned.
 func RunWithBucketForType(tx *bolt.Tx, m interface{}, fn func(*bolt.Bucket) error) error {
+	var key bucketKey
+
 	switch m.(type) {
 	case URL:
-		return fn(tx.Bucket(urlBucket))
+		key = urlKey
 	case Tag:
-		return fn(tx.Bucket(tagBucket))
+		key = tagKey
+	case APIToken:
+		key = apiTokenKey
 	case Settings, PinnedTag, PinnedTags, User:
-		return fn(tx.Bucket(appBucket))
+		key = appKey
+	default:
+		return errors.Errorf("no such bucket for type %v", m)
 	}
 
-	return errors.Errorf("no such bucket for type %v", m)
+	return fn(tx.Bucket(buckets[key]))
 }
 
 // New creates and returns a new pointer to a SufrDB struct
@@ -98,20 +116,14 @@ func (s *SufrDB) Open() error {
 	// Make sure the sufr bucket exists so we can use it later
 	err = s.bolt.Update(func(tx *bolt.Tx) error {
 		// TODO better logging
+		// TODO make buckets a map[string][]byte or something
 		log.Println("initializing database")
-		_, err := tx.CreateBucketIfNotExists(appBucket)
-		if err != nil {
-			return err
-		}
 
-		_, err = tx.CreateBucketIfNotExists(urlBucket)
-		if err != nil {
-			return err
-		}
-
-		_, err = tx.CreateBucketIfNotExists(tagBucket)
-		if err != nil {
-			return err
+		for _, bucket := range buckets {
+			_, err := tx.CreateBucketIfNotExists(bucket)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

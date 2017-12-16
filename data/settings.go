@@ -58,7 +58,7 @@ func SaveSettings(opts SettingsOptions) (*Settings, error) {
 }
 
 func saveSettings(opts SettingsOptions, tx *bolt.Tx) (*Settings, error) {
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	now := time.Now()
 
@@ -111,7 +111,7 @@ func GetSettings() (*Settings, error) {
 
 func getSettings(tx *bolt.Tx) (*Settings, error) {
 	var settings Settings
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	rawSettings := bucket.Get([]byte("settings"))
 	if len(rawSettings) == 0 {

@@ -10,9 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TagBucket is the name of the bucket to store tag objects in
-const TagBucket = "_tags"
-
 type CreateTagOptions struct {
 	Name string
 }
@@ -38,7 +35,7 @@ func (t *Tag) AddURL(url *URL, tx *bolt.Tx) error {
 
 	t.URLIDs = append(t.URLIDs, url.ID)
 
-	bucket := tx.Bucket(tagBucket)
+	bucket := tx.Bucket(buckets[tagKey])
 
 	b, err := json.Marshal(t)
 	if err != nil {
@@ -64,7 +61,7 @@ func (t *Tag) removeURL(url *URL, tx *bolt.Tx) error {
 
 	t.URLIDs = urlIDs
 
-	bucket := tx.Bucket(tagBucket)
+	bucket := tx.Bucket(buckets[tagKey])
 
 	b, err := json.Marshal(t)
 	if err != nil {
@@ -121,7 +118,7 @@ func createTag(opts CreateTagOptions, tx *bolt.Tx) (*Tag, error) {
 		UpdatedAt: now,
 	}
 
-	bucket := tx.Bucket(tagBucket)
+	bucket := tx.Bucket(buckets[tagKey])
 
 	b, err := json.Marshal(tag)
 	if err != nil {
@@ -172,7 +169,7 @@ func GetTag(id uuid.UUID) (*Tag, error) {
 
 func getTag(tagID uuid.UUID, tx *bolt.Tx) (*Tag, error) {
 	var tag Tag
-	bucket := tx.Bucket(tagBucket)
+	bucket := tx.Bucket(buckets[tagKey])
 
 	id, _ := tagID.MarshalText()
 	rawTag := bucket.Get(id)
@@ -213,7 +210,7 @@ func getOrCreateTag(name string, tx *bolt.Tx) (*Tag, bool, error) {
 func getTagByName(name string, tx *bolt.Tx) (*Tag, error) {
 	var tag *Tag
 
-	bucket := tx.Bucket(tagBucket)
+	bucket := tx.Bucket(buckets[tagKey])
 
 	err := bucket.ForEach(func(_, v []byte) error {
 		var t Tag
@@ -238,40 +235,3 @@ func getTagByName(name string, tx *bolt.Tx) (*Tag, error) {
 
 	return tag, nil
 }
-
-//TODO: support deleting tags later
-
-// func DeleteTag(tag *Tag) error {
-// 	tx, err := db.bolt.Begin(true)
-// 	if err != nil {
-// 		return errors.Wrap(err, "failed to create transaction")
-// 	}
-
-// 	defer tx.Rollback()
-
-// 	if err := deleteTag(tag, tx); err != nil {
-// 		return errors.Wrap(err, "failed to delete tag")
-// 	}
-
-// 	if err := tx.Commit(); err != nil {
-// 		return errors.Wrap(err, "transaction failed")
-// 	}
-
-// 	return nil
-// }
-
-// func deleteTag(tag *Tag, tx *bolt.Tx) error {
-// 	bucket := tx.Bucket(tagBucket)
-
-// 	for _, url := range tag.URLs {
-// 		if err := url.RemoveTag(tag, tx); err != nil {
-// 			return errors.Wrap(err, "failed to remove url from tag")
-// 		}
-// 	}
-
-// 	if err := bucket.Delete([]byte(tag.ID)); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }

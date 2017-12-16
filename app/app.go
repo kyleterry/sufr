@@ -30,6 +30,7 @@ type ctxKeyFlashes int
 type ctxKeyLoggedIn int
 type ctxKeySettings int
 type ctxKeyPinnedTags int
+type ctxKeyAPIToken int
 
 const (
 	templateDataKey ctxKeyTemplateData = 0
@@ -38,6 +39,7 @@ const (
 	loggedInKey     ctxKeyLoggedIn     = 0
 	settingsKey     ctxKeySettings     = 0
 	pinnedTagsKey   ctxKeyPinnedTags   = 0
+	apiTokenKey     ctxKeyAPIToken     = 0
 )
 
 type errorHandler func(http.ResponseWriter, *http.Request) error
@@ -52,8 +54,7 @@ func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
-type Sufr struct {
-}
+type Sufr struct{}
 
 // New created a new pointer to Sufr
 func New() *Sufr {
@@ -63,6 +64,8 @@ func New() *Sufr {
 	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)
 	auth := alice.New(AuthHandler)
 	auth = auth.Extend(all)
+	apiAuth := alice.New(LoggedInOrAPITokenAuthHandler)
+	apiAuth = apiAuth.Extend(all)
 
 	const idPattern = "{id:(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}"
 
@@ -126,7 +129,20 @@ func New() *Sufr {
 		Methods("POST", "GET").
 		Name("settings")
 
-	router.Handle("/database-backup", auth.Then(errorHandler(data.BackupHandler))).
+	tokenRouter := router.PathPrefix("/api-token").Subrouter()
+
+	tokenRouter.Handle("/roll", all.Then(errorHandler(app.apiTokenRollHandler))).
+		Methods("GET").
+		Name("api-token-roll")
+	tokenRouter.Handle("/delete", all.Then(errorHandler(app.apiTokenDeleteHandler))).
+		Methods("GET").
+		Name("api-token-delete")
+
+	router.Handle("/search", all.Then(errorHandler(app.searchHandler))).
+		Methods("GET").
+		Name("search")
+
+	router.Handle("/database-backup", apiAuth.Then(errorHandler(data.BackupHandler))).
 		Methods("GET").
 		Name("database-backup")
 

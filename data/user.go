@@ -57,7 +57,7 @@ func CreateUser(opts UserOptions) (*User, error) {
 }
 
 func createUser(opts UserOptions, tx *bolt.Tx) (*User, error) {
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	now := time.Now()
 
@@ -105,7 +105,7 @@ func GetUser() (*User, error) {
 
 func getUser(tx *bolt.Tx) (*User, error) {
 	var user User
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	rawUser := bucket.Get([]byte("user"))
 	if len(rawUser) == 0 {

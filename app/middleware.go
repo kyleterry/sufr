@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
@@ -20,6 +21,27 @@ func AuthHandler(h http.Handler) http.Handler {
 			http.Redirect(w, r, reverse("login"), http.StatusSeeOther)
 			return
 		}
+
+		h.ServeHTTP(w, r)
+	})
+}
+
+func LoggedInOrAPITokenAuthHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, pass, ok := r.BasicAuth(); ok {
+			if apiToken, _ := data.GetAPIToken(); apiToken != nil {
+				if parsedToken, err := uuid.Parse(pass); err == nil {
+					if parsedToken == apiToken.Token {
+						h.ServeHTTP(w, r)
+
+						return
+					}
+				}
+			}
+		}
+
+		h = AuthHandler(h)
+
 		h.ServeHTTP(w, r)
 	})
 }
@@ -48,6 +70,11 @@ func SetSettingsHandler(h http.Handler) http.Handler {
 			panic(err)
 		}
 
+		apiToken, _ := data.GetAPIToken()
+		if apiToken == nil {
+			apiToken = &data.APIToken{}
+		}
+
 		sm := make(map[string]interface{})
 		sm["EmbedPhotos"] = settings.EmbedPhotos
 		sm["EmbedVideos"] = settings.EmbedVideos
@@ -56,6 +83,7 @@ func SetSettingsHandler(h http.Handler) http.Handler {
 		sm["BuildTime"] = config.BuildTime
 		sm["BuildGitHash"] = config.BuildGitHash
 		sm["DataDir"] = config.DataDir
+		sm["APIToken"] = apiToken.Token
 
 		ctx := context.WithValue(r.Context(), settingsKey, sm)
 		h.ServeHTTP(w, r.WithContext(ctx))

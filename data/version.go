@@ -16,7 +16,7 @@ type Version struct {
 func CreateVersion(start uint, tx *bolt.Tx) (*Version, error) {
 	version := &Version{}
 
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	version.Version = start
 
@@ -34,7 +34,7 @@ func CreateVersion(start uint, tx *bolt.Tx) (*Version, error) {
 }
 
 func (v *Version) Increment(tx *bolt.Tx) error {
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	v.Version += 1
 
@@ -53,7 +53,7 @@ func (v *Version) Increment(tx *bolt.Tx) error {
 func GetVersion(tx *bolt.Tx) (*Version, error) {
 	var ver Version
 
-	bucket := tx.Bucket(appBucket)
+	bucket := tx.Bucket(buckets[appKey])
 
 	rawVersion := bucket.Get(versionKey)
 	if len(rawVersion) == 0 {

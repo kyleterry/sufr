@@ -18,9 +18,7 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-// URLBucket is the name of the bucket to store URL objects in
 const (
-	URLBucket       = "_urls"
 	DefaultURLTitle = "No title (edit to change)"
 )
 
@@ -108,7 +106,7 @@ func (u *URL) ToggleFavorite() error {
 	err := db.bolt.Update(func(tx *bolt.Tx) error {
 		id, _ := u.ID.MarshalText()
 
-		bucket := tx.Bucket(urlBucket)
+		bucket := tx.Bucket(buckets[urlKey])
 
 		b, err := json.Marshal(u)
 		if err != nil {
@@ -210,7 +208,7 @@ func createURL(opts CreateURLOptions, fetcher URLMetadataFetcher, tx *bolt.Tx) (
 		}
 	}
 
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	b, err := json.Marshal(url)
 	if err != nil {
@@ -301,7 +299,7 @@ func updateURL(opts UpdateURLOptions, tx *bolt.Tx) (*URL, error) {
 
 	url.UpdatedAt = time.Now()
 
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	b, err := json.Marshal(url)
 	if err != nil {
@@ -336,7 +334,7 @@ func DeleteURL(url *URL) error {
 }
 
 func deleteURL(url *URL, tx *bolt.Tx) error {
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	for _, tag := range url.Tags {
 		if err := tag.removeURL(url, tx); err != nil {
@@ -381,7 +379,7 @@ func GetURLs() ([]*URL, error) {
 
 func getURLs(tx *bolt.Tx) ([]*URL, error) {
 	var urls []*URL
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	bucket.ForEach(func(_, v []byte) error {
 		url := URL{}
@@ -405,7 +403,7 @@ func getURLs(tx *bolt.Tx) ([]*URL, error) {
 
 func getFavoriteURLs(tx *bolt.Tx) ([]*URL, error) {
 	var urls []*URL
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	bucket.ForEach(func(_, v []byte) error {
 		url := URL{}
@@ -452,7 +450,7 @@ func GetURL(id uuid.UUID) (*URL, error) {
 
 func getURL(urlID uuid.UUID, tx *bolt.Tx) (*URL, error) {
 	var url URL
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	id, _ := urlID.MarshalText()
 	rawURL := bucket.Get(id)
@@ -499,7 +497,7 @@ func GetURLByURL(urlstr string) (*URL, error) {
 
 func getURLByURL(urlstr string, tx *bolt.Tx) (*URL, error) {
 	var url *URL
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	err := bucket.ForEach(func(_, v []byte) error {
 		var u URL
@@ -524,7 +522,7 @@ func getURLByURL(urlstr string, tx *bolt.Tx) (*URL, error) {
 func getURLCount(tx *bolt.Tx) (int, error) {
 	var i int
 
-	bucket := tx.Bucket(urlBucket)
+	bucket := tx.Bucket(buckets[urlKey])
 
 	err := bucket.ForEach(func(k, _ []byte) error {
 		i++

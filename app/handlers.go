@@ -571,7 +571,7 @@ func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 
 	session, err := store.Get(r, "flashes")
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get session store")
 	}
 
 	settings, err = data.SaveSettings(opts)
@@ -586,6 +586,42 @@ func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 
 	session.AddFlash("Settings have been saved", "success")
 	session.Save(r, w)
+
+	http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+
+	return nil
+}
+
+func (a Sufr) apiTokenRollHandler(w http.ResponseWriter, r *http.Request) error {
+	if err := data.DeleteAPITokens(); err != nil {
+		return err
+	}
+
+	session, err := store.Get(r, "flashes")
+	if err != nil {
+		return errors.Wrap(err, "failed to get session store")
+	}
+
+	if _, err := data.CreateAPIToken(); err != nil {
+		session.AddFlash("There was an error creating a new API token", "danger")
+		session.Save(r, w)
+		http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+
+		return nil
+	}
+
+	session.AddFlash("Successfully rolled API token", "success")
+	session.Save(r, w)
+
+	http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
+
+	return nil
+}
+
+func (a Sufr) apiTokenDeleteHandler(w http.ResponseWriter, r *http.Request) error {
+	if err := data.DeleteAPITokens(); err != nil {
+		return err
+	}
 
 	http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
 
