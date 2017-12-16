@@ -3,12 +3,17 @@
 <div class="row">
   <div class="col-xs-12">
     {{ if .Count }}
+
+      {{ if .IsSearch }}
+      <h3>{{ .Count }} search results for "{{ .Query }}"</h3>
+      {{ end }}
+
       {{ $settings := .Settings }}
       {{ $loggedin := .LoggedIn }}
       {{ range $url := .URLs }}
         {{ if (or $loggedin $url.IsPublic) }}
           {{ template "url-partial" newcontext "URL" $url "Settings" $settings "LoggedIn" $loggedin }}
-        {{end}}
+        {{ end }}
       {{ end }}
 
       {{ if .Paginator.HasPagination }}

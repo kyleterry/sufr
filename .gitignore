@@ -24,3 +24,5 @@ _testmain.go
 *.prof
 sufr
 .DS_Store
+app/bindata.go
+*.swp

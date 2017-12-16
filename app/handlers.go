@@ -627,3 +627,30 @@ func (a Sufr) apiTokenDeleteHandler(w http.ResponseWriter, r *http.Request) erro
 
 	return nil
 }
+
+func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
+	query := req.FormValue("q")
+	if query == "" {
+		http.Error(w, "no query", http.StatusBadRequest)
+		return nil
+	}
+
+	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.NewSearchURLGetter(query))
+	if err != nil {
+		return errors.Wrap(err, "failed to get paginator")
+	}
+
+	ctx := r.Context()
+
+	templateData := ctx.Value(templateDataKey).(map[string]interface{})
+	templateData["Count"] = len(paginator.URLs)
+	templateData["URLs"] = paginator.URLs
+	templateData["Paginator"] = paginator
+	templateData["IsSearch"] = true
+	templateData["Query"] = query
+
+	ctx = context.WithValue(ctx, templateDataKey, templateData)
+
+	return renderTemplate(w, r.WithContext(ctx), "url-search-index")
+
+}

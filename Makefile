@@ -7,7 +7,7 @@ BIN_OUT=sufr
 all: build
 
 build: vendor-get generate
-	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)'
+	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)' ./cmd/...
 
 clean:
 	-rm $(BIN_OUT)
@@ -17,13 +17,13 @@ cross-compile:
 	gox -ldflags '$(LDFLAGS)'
 
 generate:
-	go generate
+	go generate ./...
 
 install:
 	@cp $(BIN_OUT) $(INSTALL_BIN)sufr
 
 vendor-get:
-	go get -u -v github.com/jteeuwen/go-bindata/...
+	go get -u -v github.com/shuLhan/go-bindata/...
 
 test:
 	go test -v $(shell go list ./... | grep -v vendor)
