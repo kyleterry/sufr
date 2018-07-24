@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kyleterry/sufr/data"
+	"github.com/kyleterry/sufr/static"
 	"github.com/oxtoacart/bpool"
 )
 
@@ -80,7 +81,7 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string) error {
 func createTemplate(files ...string) *template.Template {
 	var filebytes = []byte{}
 	for _, f := range files {
-		filebytes = append(filebytes, MustAsset(f)...)
+		filebytes = append(filebytes, static.MustAsset(f)...)
 	}
 	tmpl := template.New("*").Funcs(templateFuncs)
 	return template.Must(tmpl.Parse(string(filebytes)))

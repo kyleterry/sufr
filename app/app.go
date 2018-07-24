@@ -52,13 +52,24 @@ func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type SufrServerOptions struct {
+	DB           *data.SufrDB
+	SessionStore *sessions.CookieStore
+}
+
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
-type Sufr struct{}
+type Sufr struct {
+	db           *data.SufrDB
+	sessionStore *sessions.CookieStore
+}
 
 // New created a new pointer to Sufr
-func New() *Sufr {
-	app := &Sufr{}
+func New(opts SufrServerOptions) *Sufr {
+	app := &Sufr{
+		db:           opts.DB,
+		sessionStore: opts.SessionStore,
+	}
 
 	// Wrapped middlware
 	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)
@@ -70,7 +81,7 @@ func New() *Sufr {
 	const idPattern = "{id:(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}"
 
 	// This route is used to initially configure the instance
-	router.Handle("/config", errorHandler(app.registrationHandler)).
+	router.Handle("/config", LoggingHandler(errorHandler(app.registrationHandler))).
 		Methods("POST", "GET").
 		Name("config")
 
@@ -146,7 +157,7 @@ func New() *Sufr {
 		Methods("GET").
 		Name("database-backup")
 
-	router.PathPrefix("/static").Handler(staticHandler)
+	router.PathPrefix("/static").Handler(LoggingHandler(staticHandler))
 
 	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(http.StatusNotFound)
@@ -157,6 +168,14 @@ func New() *Sufr {
 }
 
 func (s Sufr) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// 1. Get session data
+	// 2. Make flashes structure
+	// 3. Build on context
+	// 4. Check if application is configured
+	// 5. Check if the instance is globally private
+	// 6. Route using ShiftPath(p)
+	// 7. Cleanup
+
 	session, err := store.Get(r, "flashes")
 	if err != nil {
 		log.Println(err)

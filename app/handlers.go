@@ -15,13 +15,14 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
+	"github.com/kyleterry/sufr/static"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var staticHandler = http.FileServer(
-	&assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: AssetInfo},
-)
+var staticHandler = http.StripPrefix("/static/", http.FileServer(
+	&assetfs.AssetFS{Asset: static.Asset, AssetDir: static.AssetDir, AssetInfo: static.AssetInfo},
+))
 
 func page(r *http.Request) int {
 	pagestr := r.URL.Query().Get("page")
@@ -629,7 +630,7 @@ func (a Sufr) apiTokenDeleteHandler(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
-	query := req.FormValue("q")
+	query := r.FormValue("q")
 	if query == "" {
 		http.Error(w, "no query", http.StatusBadRequest)
 		return nil

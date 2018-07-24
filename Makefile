@@ -23,7 +23,8 @@ install:
 	@cp $(BIN_OUT) $(INSTALL_BIN)sufr
 
 vendor-get:
-	go get -u -v github.com/shuLhan/go-bindata/...
+	go get -u -v github.com/jteeuwen/go-bindata/...
+	go get -u -v github.com/elazarl/go-bindata-assetfs/...
 
 test:
 	go test -v $(shell go list ./... | grep -v vendor)

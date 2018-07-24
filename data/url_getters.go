@@ -18,10 +18,11 @@ type SearchURLGetter struct {
 	query string
 }
 
-func NewSearchURLGetter(query string) SearchURLGetter {
+func NewSearchURLGetter(query string) *SearchURLGetter {
 	return &SearchURLGetter{query}
 }
 
 func (s SearchURLGetter) GetURLs(tx *bolt.Tx) ([]*URL, error) {
-	return getResultingURLsFromSearch(s.query)
+	// return getResultingURLsFromSearch(s.query)
+	return nil, nil
 }

@@ -5,6 +5,6 @@ type query struct {
 	domains []string
 }
 
-func NewQuery(query string) *query {
+func NewQuery(q string) *query {
 	return &query{}
 }
