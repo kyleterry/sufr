@@ -49,11 +49,11 @@ type SufrDB struct {
 	sync.Mutex
 }
 
-func MustInit() {
+func MustInit(cfg *config.Config) {
 	var err error
 
 	once.Do(func() {
-		db, err = New(config.DatabaseFile)
+		db, err = New(cfg.DatabaseFile())
 		if err != nil {
 			panic(errors.Wrap(err, "failed to open database"))
 		}

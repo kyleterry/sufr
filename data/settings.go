@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/kyleterry/sufr/config"
 	"github.com/pkg/errors"
 )
 
@@ -62,16 +61,11 @@ func saveSettings(opts SettingsOptions, tx *bolt.Tx) (*Settings, error) {
 
 	now := time.Now()
 
-	perPage := opts.PerPage
-	if perPage == 0 {
-		perPage = config.DefaultPerPage
-	}
-
 	settings := &Settings{
 		Private:     opts.Private,
 		EmbedVideos: opts.EmbedVideos,
 		EmbedPhotos: opts.EmbedPhotos,
-		PerPage:     perPage,
+		PerPage:     opts.PerPage,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}

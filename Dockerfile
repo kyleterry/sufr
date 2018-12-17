@@ -1,7 +1,8 @@
-FROM golang:1.10-alpine as builder
+FROM golang:1.11-alpine as builder
+ENV GO111MODULE on
 WORKDIR /go/src/github.com/kyleterry/sufr
 COPY . .
-RUN apk --no-cache add make git
+RUN apk --no-cache add make git gcc bind-dev musl-dev
 RUN make
 
 FROM alpine:3.4

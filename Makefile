@@ -2,12 +2,12 @@ LDFLAGS += -X "github.com/kyleterry/sufr/config.BuildTime=$(shell date -u '+%Y-%
 LDFLAGS += -X "github.com/kyleterry/sufr/config.BuildGitHash=$(shell git rev-parse HEAD)"
 PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin/
-BIN_OUT=sufr
+BIN_OUT=bin/sufr
 
 all: build
 
-build: vendor-get generate
-	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)' ./cmd/...
+build: generate
+	go build -o $(BIN_OUT) -v -ldflags '$(LDFLAGS)' ./cmd/sufr
 
 clean:
 	-rm $(BIN_OUT)
@@ -22,11 +22,7 @@ generate:
 install:
 	@cp $(BIN_OUT) $(INSTALL_BIN)sufr
 
-vendor-get:
-	go get -u -v github.com/jteeuwen/go-bindata/...
-	go get -u -v github.com/elazarl/go-bindata-assetfs/...
-
 test:
-	go test -v $(shell go list ./... | grep -v vendor)
+	go test -v ./...
 
-.PHONY: all clean build cross-compile generate install vendor-get
+.PHONY: all clean build cross-compile generate install

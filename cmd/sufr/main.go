@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
+	"github.com/joeshaw/envdecode"
 	"github.com/kyleterry/sufr/app"
 	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
@@ -11,16 +13,32 @@ import (
 )
 
 func main() {
-	config.New()
-	log.Println("Welcome to SUFR")
+	cfg := &config.Config{}
 
-	data.MustInit()
-	migrations.MustMigrate()
+	config.SetBuildInfo(cfg)
 
-	sufrApp := app.New()
+	if err := envdecode.Decode(cfg); err != nil {
+		if err != envdecode.ErrNoTargetFieldsAreSet {
+			log.Fatal(err)
+		}
+	}
 
-	log.Printf("listening on http://%s", config.ApplicationBind)
-	if err := http.ListenAndServe(config.ApplicationBind, sufrApp); err != nil {
+	config.SetDefaults(cfg)
+
+	flag.StringVar(&cfg.BindAddr, "bind", cfg.BindAddr, "Host and port to bind to")
+	flag.StringVar(&cfg.DataDir, "data-dir", cfg.DataDir, "Location to store data in")
+	flag.IntVar(&cfg.ResultsPerPage, "results-per-page", cfg.ResultsPerPage, "Results to display per page")
+	flag.BoolVar(&cfg.Debug, "debug", cfg.Debug, "Turn debugging on")
+
+	flag.Parse()
+
+	data.MustInit(cfg)
+	migrations.MustMigrate(cfg)
+
+	sufrApp := app.New(cfg)
+
+	log.Printf("listening on http://%s", cfg.BindAddr)
+	if err := http.ListenAndServe(cfg.BindAddr, sufrApp); err != nil {
 		panic(err)
 	}
 }

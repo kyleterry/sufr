@@ -8,21 +8,17 @@ import (
 	"strconv"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
-	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
-	"github.com/kyleterry/sufr/static"
+	"github.com/kyleterry/sufr/ui"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
 
-var staticHandler = http.StripPrefix("/static/", http.FileServer(
-	&assetfs.AssetFS{Asset: static.Asset, AssetDir: static.AssetDir, AssetInfo: static.AssetInfo},
-))
+var staticHandler = http.FileServer(ui.NewFileSystem())
 
 func page(r *http.Request) int {
 	pagestr := r.URL.Query().Get("page")
@@ -38,22 +34,18 @@ func page(r *http.Request) int {
 	return int(page)
 }
 
-func perPage(r *http.Request) int {
-	settings, ok := r.Context().Value(settingsKey).(map[string]interface{})
-	if !ok {
-		return config.DefaultPerPage
+func (a *Sufr) perPage(r *http.Request) int {
+	if settings, ok := r.Context().Value(settingsKey).(map[string]interface{}); ok {
+		if per, ok := settings["PerPage"].(int); ok {
+			return per
+		}
 	}
 
-	per, ok := settings["PerPage"].(int)
-	if !ok {
-		return config.DefaultPerPage
-	}
-
-	return per
+	return a.cfg.ResultsPerPage
 }
 
 func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.AllURLGetter{})
+	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.AllURLGetter{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}
@@ -71,7 +63,7 @@ func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.FavURLGetter{})
+	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.FavURLGetter{})
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}
@@ -318,7 +310,7 @@ func (a *Sufr) tagViewHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, tag)
+	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, tag)
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}
@@ -412,7 +404,7 @@ func (a *Sufr) registrationHandler(w http.ResponseWriter, r *http.Request) error
 		Private:     opts.Private,
 		EmbedVideos: opts.EmbedVideos,
 		EmbedPhotos: opts.EmbedPhotos,
-		PerPage:     opts.PerPage,
+		PerPage:     a.cfg.ResultsPerPage,
 	}
 
 	_, err = data.SaveSettings(settingsOpts)
@@ -636,7 +628,7 @@ func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	paginator, err := data.NewURLPaginator(page(r), perPage(r), 3, data.NewSearchURLGetter(query))
+	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.NewSearchURLGetter(query))
 	if err != nil {
 		return errors.Wrap(err, "failed to get paginator")
 	}

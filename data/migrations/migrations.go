@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/boltdb/bolt"
+	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
 	"github.com/pkg/errors"
 )
@@ -23,7 +24,7 @@ var legacyBucket = []byte("sufr")
 // into it as a parameter.
 type Migration interface {
 	Description() string
-	Migrate(tx *bolt.Tx) error
+	Migrate(cfg *config.Config, tx *bolt.Tx) error
 }
 
 // Migrations holds the list of migrations that need to be ran.
@@ -33,7 +34,7 @@ var Migrations = []Migration{
 	MigrateOldDatabase{},
 }
 
-func run(tx *bolt.Tx) error {
+func run(cfg *config.Config, tx *bolt.Tx) error {
 	defer tx.Rollback()
 
 	var version *data.Version
@@ -73,7 +74,7 @@ func run(tx *bolt.Tx) error {
 	log.Println("starting migrations")
 	for _, migration := range Migrations[version.Version:] {
 		log.Printf("running migration: %s, version %d...", migration.Description(), version.Version+1)
-		if err := migration.Migrate(tx); err != nil {
+		if err := migration.Migrate(cfg, tx); err != nil {
 			log.Println("error migrating ; rolling back.", "error", err)
 			tx.Rollback()
 
@@ -95,14 +96,14 @@ Commit:
 	return nil
 }
 
-func MustMigrate() {
+func MustMigrate(cfg *config.Config) {
 	data.DBWithLock(func(db *bolt.DB) {
 		tx, err := db.Begin(true)
 		if err != nil {
 			panic(errors.Wrap(err, "failed to start transaction"))
 		}
 
-		if err := run(tx); err != nil {
+		if err := run(cfg, tx); err != nil {
 			panic(err)
 		}
 

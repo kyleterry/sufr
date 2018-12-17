@@ -1,56 +1,87 @@
 package config
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 )
 
 const Version = "1.1.1-dev"
 
 const (
-	DatabaseName   = "sufr.db"
 	BucketNameRoot = "sufr"
 	BucketNameURL  = "url"
 	BucketNameUser = "user"
 	BucketNameTag  = "tag"
 	DBFileMode     = 0755
-
-	DefaultPerPage = 40
 )
 
 var (
 	SUFRUserAgent = fmt.Sprintf("Linux:SUFR:v%s", Version)
 
-	ApplicationBind string
-	BuildTime       string
-	BuildGitHash    string
-	DataDir         string
-	DatabaseFile    string
-	Debug           bool
+	BuildTime    string
+	BuildGitHash string
+	DataDir      string
+	DatabaseFile string
 )
 
-func New() {
-	defaultDataDir := fmt.Sprintf(filepath.Join(os.Getenv("HOME"), ".config", "sufr", "data"))
+var (
+	DefaultDataDir   = fmt.Sprintf(filepath.Join(os.Getenv("HOME"), ".config", "sufr", "data"))
+	DefaultUserAgent = fmt.Sprintf("Linux:SUFR:v%s", Version)
+)
 
-	flag.StringVar(&ApplicationBind, "bind", "localhost:8090", "Host and port to bind to")
-	flag.StringVar(&DataDir, "data-dir", defaultDataDir, "Location to store data in")
-	flag.BoolVar(&Debug, "debug", false, "Turn debugging on")
+const (
+	DefaultBindAddr       = "localhost:8090"
+	DefaultDatabaseName   = "sufr.db"
+	DefaultResultsPerPage = 40
+)
 
-	flag.Parse()
+type BuildInfo struct {
+	Time    string
+	GitHash string
+}
 
-	if _, err := os.Stat(DataDir); err != nil {
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(DataDir, os.ModePerm)
-			if err != nil {
-				panic(err)
-			}
-		} else {
-			panic(err)
-		}
+func SetBuildInfo(cfg *Config) {
+	cfg.Build = BuildInfo{
+		Time:    BuildTime,
+		GitHash: BuildGitHash,
+	}
+}
+
+func SetDefaults(cfg *Config) {
+	if cfg.BindAddr == "" {
+		cfg.BindAddr = DefaultBindAddr
 	}
 
-	DatabaseFile = path.Join(DataDir, DatabaseName)
+	if cfg.DataDir == "" {
+		cfg.DataDir = DefaultDataDir
+	}
+
+	if cfg.ResultsPerPage == 0 {
+		cfg.ResultsPerPage = DefaultResultsPerPage
+	}
+
+	if cfg.UserAgent == "" {
+		cfg.UserAgent = DefaultUserAgent
+	}
+
+	if cfg.DatabaseFilename == "" {
+		cfg.DatabaseFilename = DefaultDatabaseName
+	}
+}
+
+type Config struct {
+	BindAddr         string `env:"SUFR_BIND_ADDR"`
+	DataDir          string `env:"SUFR_DATA_DIR"`
+	ResultsPerPage   int    `env:"SUFR_RESULTS_PER_PAGE"`
+	UserAgent        string `env:"SUFR_USER_AGENT"`
+	DatabaseFilename string `env:"SUFR_DATABASE_FILENAME"`
+	Debug            bool   `env:"SUFR_DEBUG"`
+
+	// build time information
+	Build BuildInfo
+}
+
+func (c Config) DatabaseFile() string {
+	return filepath.Join(c.DataDir, c.DatabaseFilename)
 }

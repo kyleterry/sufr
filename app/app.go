@@ -12,15 +12,16 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
+	gorsess "github.com/gorilla/sessions"
 	"github.com/justinas/alice"
+	"github.com/kyleterry/sufr/config"
 	"github.com/kyleterry/sufr/data"
 	"github.com/pkg/errors"
 )
 
 var (
 	router = mux.NewRouter()
-	store  = sessions.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
+	store  = gorsess.NewCookieStore([]byte("I gotta glock in my rari")) // TODO(kt): generate secret key instead of using Fetty Wap lyrics
 )
 
 // Context key types so we don't clobber the global context store
@@ -52,24 +53,27 @@ func (fn errorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type SufrServerOptions struct {
-	DB           *data.SufrDB
-	SessionStore *sessions.CookieStore
-}
+// type SufrServerOptions struct {
+// 	DB           *data.SufrDB
+// 	SessionStore *sessions.CookieStore
+// }
 
 // Sufr is the main application struct. It also implements http.Handler so it can
 // be passed directly into ListenAndServe
 type Sufr struct {
-	db           *data.SufrDB
-	sessionStore *sessions.CookieStore
+	cfg      *config.Config
+	db       *data.SufrDB
+	sessions *gorsess.CookieStore
 }
 
 // New created a new pointer to Sufr
-func New(opts SufrServerOptions) *Sufr {
-	app := &Sufr{
-		db:           opts.DB,
-		sessionStore: opts.SessionStore,
-	}
+func New(cfg *config.Config) *Sufr {
+	// app := &Sufr{
+	// 	db:           opts.DB,
+	// 	sessionStore: opts.SessionStore,
+	// }
+
+	app := &Sufr{}
 
 	// Wrapped middlware
 	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)

@@ -82,6 +82,7 @@ func SetSettingsHandler(h http.Handler) http.Handler {
 		sm["Version"] = config.Version
 		sm["BuildTime"] = config.BuildTime
 		sm["BuildGitHash"] = config.BuildGitHash
+		// TODO pull this from config struct
 		sm["DataDir"] = config.DataDir
 		sm["APIToken"] = apiToken.Token
 

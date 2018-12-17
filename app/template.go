@@ -6,21 +6,22 @@ import (
 	"net/http"
 
 	"github.com/kyleterry/sufr/data"
-	"github.com/kyleterry/sufr/static"
+	"github.com/kyleterry/sufr/ui"
 	"github.com/oxtoacart/bpool"
+	"github.com/shurcooL/httpfs/vfsutil"
 )
 
 var bufpool = bpool.NewBufferPool(64)
 
 var templateMap = map[string]*template.Template{
-	"url-index":    createTemplate("templates/base.html", "templates/url-index.html"),
-	"url-new":      createTemplate("templates/base.html", "templates/url-new.html"),
-	"url-view":     createTemplate("templates/base.html", "templates/url-view.html"),
-	"url-edit":     createTemplate("templates/base.html", "templates/url-edit.html"),
-	"settings":     createTemplate("templates/base.html", "templates/settings.html"),
-	"registration": createTemplate("templates/config-base.html", "templates/register.html"),
-	"login":        createTemplate("templates/config-base.html", "templates/login.html"),
-	"404":          createTemplate("templates/config-base.html", "templates/404.html"),
+	"url-index":    mustCreateTemplate("templates/base.html", "templates/url-index.html"),
+	"url-new":      mustCreateTemplate("templates/base.html", "templates/url-new.html"),
+	"url-view":     mustCreateTemplate("templates/base.html", "templates/url-view.html"),
+	"url-edit":     mustCreateTemplate("templates/base.html", "templates/url-edit.html"),
+	"settings":     mustCreateTemplate("templates/base.html", "templates/settings.html"),
+	"registration": mustCreateTemplate("templates/config-base.html", "templates/register.html"),
+	"login":        mustCreateTemplate("templates/config-base.html", "templates/login.html"),
+	"404":          mustCreateTemplate("templates/config-base.html", "templates/404.html"),
 }
 
 var templateFuncs = template.FuncMap{
@@ -78,10 +79,15 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string) error {
 	return nil
 }
 
-func createTemplate(files ...string) *template.Template {
+func mustCreateTemplate(files ...string) *template.Template {
 	var filebytes = []byte{}
 	for _, f := range files {
-		filebytes = append(filebytes, static.MustAsset(f)...)
+		b, err := vfsutil.ReadFile(ui.NewFileSystem(), f)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		filebytes = append(filebytes, b...)
 	}
 	tmpl := template.New("*").Funcs(templateFuncs)
 	return template.Must(tmpl.Parse(string(filebytes)))

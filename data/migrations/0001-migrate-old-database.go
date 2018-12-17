@@ -75,7 +75,7 @@ func (MigrateOldDatabase) Description() string {
 	return "migrating legacy database"
 }
 
-func (MigrateOldDatabase) Migrate(tx *bolt.Tx) error {
+func (MigrateOldDatabase) Migrate(cfg *config.Config, tx *bolt.Tx) error {
 	var (
 		root  = []byte("sufr")
 		urlB  = []byte("url")
@@ -97,7 +97,7 @@ func (MigrateOldDatabase) Migrate(tx *bolt.Tx) error {
 			Private:     oldSettings.Visibility == "private",
 			EmbedPhotos: oldSettings.EmbedPhotos,
 			EmbedVideos: oldSettings.EmbedVideos,
-			PerPage:     config.DefaultPerPage,
+			PerPage:     cfg.ResultsPerPage,
 			CreatedAt:   oldSettings.CreatedAt,
 			UpdatedAt:   time.Now(),
 		}
