@@ -621,6 +621,12 @@ func (a Sufr) apiTokenDeleteHandler(w http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
+func (a Sufr) healthzHandler(w http.ResponseWriter, r *http.Request) error {
+	w.WriteHeader(http.StatusOK)
+
+	return nil
+}
+
 func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
 	query := r.FormValue("q")
 	if query == "" {

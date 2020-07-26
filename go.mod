@@ -1,5 +1,7 @@
 module github.com/kyleterry/sufr
 
+go 1.14
+
 require (
 	github.com/PuerkitoBio/goquery v1.1.0
 	github.com/andybalholm/cascadia v0.0.0-20161224141413-349dd0209470

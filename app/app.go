@@ -161,6 +161,8 @@ func New(cfg *config.Config) *Sufr {
 		Methods("GET").
 		Name("database-backup")
 
+	router.Handle("/healthz", errorHandler(app.healthzHandler)).Methods("GET").Name("healthz")
+
 	router.PathPrefix("/static").Handler(LoggingHandler(staticHandler))
 
 	router.NotFoundHandler = errorHandler(func(w http.ResponseWriter, r *http.Request) error {
