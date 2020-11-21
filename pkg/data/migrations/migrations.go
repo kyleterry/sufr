@@ -9,8 +9,8 @@ import (
 	"log"
 
 	"github.com/boltdb/bolt"
-	"github.com/kyleterry/sufr/config"
-	"github.com/kyleterry/sufr/data"
+	"github.com/kyleterry/sufr/pkg/config"
+	"github.com/kyleterry/sufr/pkg/data"
 	"github.com/pkg/errors"
 )
 

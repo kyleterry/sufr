@@ -12,8 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
-	"github.com/kyleterry/sufr/data"
-	"github.com/kyleterry/sufr/ui"
+	"github.com/kyleterry/sufr/pkg/data"
+	"github.com/kyleterry/sufr/pkg/ui"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )

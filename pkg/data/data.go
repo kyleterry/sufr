@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/kyleterry/sufr/config"
+	"github.com/kyleterry/sufr/pkg/config"
 	"github.com/pkg/errors"
 )
 

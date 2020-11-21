@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
-	"github.com/kyleterry/sufr/config"
-	"github.com/kyleterry/sufr/data"
+	"github.com/kyleterry/sufr/pkg/config"
+	"github.com/kyleterry/sufr/pkg/data"
 )
 
 func LoggingHandler(h http.Handler) http.Handler {

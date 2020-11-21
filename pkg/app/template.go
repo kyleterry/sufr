@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/kyleterry/sufr/data"
-	"github.com/kyleterry/sufr/ui"
+	"github.com/kyleterry/sufr/pkg/data"
+	"github.com/kyleterry/sufr/pkg/ui"
 	"github.com/oxtoacart/bpool"
 	"github.com/shurcooL/httpfs/vfsutil"
 )

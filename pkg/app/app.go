@@ -14,8 +14,8 @@ import (
 	"github.com/gorilla/mux"
 	gorsess "github.com/gorilla/sessions"
 	"github.com/justinas/alice"
-	"github.com/kyleterry/sufr/config"
-	"github.com/kyleterry/sufr/data"
+	"github.com/kyleterry/sufr/pkg/config"
+	"github.com/kyleterry/sufr/pkg/data"
 	"github.com/pkg/errors"
 )
 

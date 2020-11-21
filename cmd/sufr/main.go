@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/joeshaw/envdecode"
-	"github.com/kyleterry/sufr/app"
-	"github.com/kyleterry/sufr/config"
-	"github.com/kyleterry/sufr/data"
-	"github.com/kyleterry/sufr/data/migrations"
+	"github.com/kyleterry/sufr/pkg/app"
+	"github.com/kyleterry/sufr/pkg/config"
+	"github.com/kyleterry/sufr/pkg/data"
+	"github.com/kyleterry/sufr/pkg/data/migrations"
 )
 
 func main() {
