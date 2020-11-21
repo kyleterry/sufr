@@ -32,6 +32,7 @@ type Migration interface {
 // used as an index into this slice to find pending migrations.
 var Migrations = []Migration{
 	MigrateOldDatabase{},
+	CreateInitialPageIndexes{},
 }
 
 func run(cfg *config.Config, tx *bolt.Tx) error {

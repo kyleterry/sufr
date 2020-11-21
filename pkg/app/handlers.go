@@ -45,16 +45,21 @@ func (a *Sufr) perPage(r *http.Request) int {
 }
 
 func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.AllURLGetter{})
+	paginator, err := data.NewPageIndexPaginator(page(r))
 	if err != nil {
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, r, "404")
+		}
+
 		return errors.Wrap(err, "failed to get paginator")
 	}
 
 	ctx := r.Context()
 
 	templateData := ctx.Value(templateDataKey).(map[string]interface{})
-	templateData["Count"] = len(paginator.URLs)
-	templateData["URLs"] = paginator.URLs
+	templateData["Count"] = len(paginator.URLs())
+	templateData["URLs"] = paginator.URLs()
 	templateData["Paginator"] = paginator
 
 	ctx = context.WithValue(ctx, templateDataKey, templateData)
@@ -65,6 +70,11 @@ func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error {
 	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.FavURLGetter{})
 	if err != nil {
+		if errors.Cause(err) == data.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			return renderTemplate(w, r, "404")
+		}
+
 		return errors.Wrap(err, "failed to get paginator")
 	}
 
@@ -108,18 +118,6 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// if !govalidator.IsURL(createURLOptions.URL) {
-	// 	errormessage := "URL is required"
-	// 	if urlstring != "" {
-	// 		errormessage = fmt.Sprintf("URL \"%s\" is not valid", urlstring)
-	// 	}
-	// 	//TODO: wrap AddFlash in session.Flash()
-	// 	session.AddFlash(errormessage, "danger")
-	// 	session.Save(r, w)
-	// 	http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
-	// 	return nil
-	// }
-
 	// TODO: make and check for a validation error
 	// session.FlashValidationError(err)
 	url, err := data.CreateURL(createURLOptions, data.HTTPMetadataFetcher{})
@@ -132,6 +130,10 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 			http.Redirect(w, r, reverse("url-new"), http.StatusSeeOther)
 			return nil
 		}
+		return err
+	}
+
+	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
 		return err
 	}
 
@@ -267,6 +269,10 @@ func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "failed to get url")
 	}
 
+	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
+		return err
+	}
+
 	http.Redirect(w, r, reverse("url-view", "id", url.ID), http.StatusSeeOther)
 	return nil
 }
@@ -291,6 +297,10 @@ func (a *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 	err = data.DeleteURL(url)
 	if err != nil {
 		return errors.Wrap(err, "failed to delete url")
+	}
+
+	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
+		return err
 	}
 
 	http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
@@ -575,6 +585,10 @@ func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 		http.Redirect(w, r, reverse("settings"), http.StatusSeeOther)
 
 		return nil
+	}
+
+	if err := data.CreatePageIndexes(settings.PerPage); err != nil {
+		return err
 	}
 
 	session.AddFlash("Settings have been saved", "success")

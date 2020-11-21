@@ -361,12 +361,6 @@ func GetURLs() ([]*URL, error) {
 			return err
 		}
 
-		// for _, url := range urls {
-		// 	if err := url.fillTags(tx); err != nil {
-		// 		return errors.Wrap(err, "failed to fill tags")
-		// 	}
-		// }
-
 		return nil
 	})
 

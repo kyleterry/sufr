@@ -7,6 +7,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+type Paginator interface {
+	CurrentPage() int
+	HasPagination() bool
+	HasNext() bool
+	HasPrevious() bool
+	Pages() []int
+	NextPage() int
+	PreviousPage() int
+	TotalPages() int
+	URLs() []*URL
+}
+
 // interface for fetching different sets of URLs for use in the paginator
 type urlGetter interface {
 	GetURLs(*bolt.Tx) ([]*URL, error)

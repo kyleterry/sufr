@@ -73,7 +73,9 @@ func New(cfg *config.Config) *Sufr {
 	// 	sessionStore: opts.SessionStore,
 	// }
 
-	app := &Sufr{}
+	app := &Sufr{
+		cfg: cfg,
+	}
 
 	// Wrapped middlware
 	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)
