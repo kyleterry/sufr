@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine as builder
+FROM golang:1.15-alpine as builder
 WORKDIR /go/src/github.com/kyleterry/sufr
 COPY . .
 RUN sed -i 's/http\:\/\/dl-cdn.alpinelinux.org/https\:\/\/mirror.clarkson.edu/g' /etc/apk/repositories
