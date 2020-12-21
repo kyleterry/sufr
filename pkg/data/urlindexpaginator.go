@@ -76,15 +76,23 @@ func (p *pageIndexPaginator) PreviousPage() int {
 	return p.currentPage - 1
 }
 
+func (p *pageIndexPaginator) TotalRecords() int {
+	return p.index.TotalRecords
+}
+
 func (p *pageIndexPaginator) TotalPages() int {
 	return p.index.TotalPages
+}
+
+func (p *pageIndexPaginator) TotalPageRecords() int {
+	return len(p.index.URLs)
 }
 
 func (p *pageIndexPaginator) URLs() []*URL {
 	return p.index.URLs
 }
 
-func NewPageIndexPaginator(page int) (*pageIndexPaginator, error) {
+func NewPageIndexPaginator(pit PageIndexType, page int) (*pageIndexPaginator, error) {
 	pi := &PageIndex{}
 
 	if page == 0 {
@@ -94,7 +102,8 @@ func NewPageIndexPaginator(page int) (*pageIndexPaginator, error) {
 	err := db.bolt.View(func(tx *bolt.Tx) error {
 		var err error
 
-		pi, err = GetPageIndexByPage(page)
+		pim := NewPageIndexManager(pit)
+		pi, err = pim.GetPageIndexByPage(page)
 		if err != nil {
 			return err
 		}

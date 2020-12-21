@@ -1,5 +1,6 @@
 LDFLAGS += -X "github.com/kyleterry/sufr/config.BuildTime=$(shell date -u '+%Y-%m-%d %I:%M:%S %Z')"
 LDFLAGS += -X "github.com/kyleterry/sufr/config.BuildGitHash=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/kyleterry/sufr/config.Version=$(shell git describe --tags)"
 PREFIX?=/usr/local
 INSTALL_BIN=$(PREFIX)/bin/
 BIN_OUT=bin/sufr

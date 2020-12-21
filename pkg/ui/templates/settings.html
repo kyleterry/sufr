@@ -2,112 +2,114 @@
 {{ define "content" }}
 {{ $global := .Settings }}
 {{ $settings := .SettingsObject }}
-<div class="row">
-  <div class="col-xs-12">
-    <div class="row">
-      <div class="col-xs-12">
-        <div class="panel panel-info">
-          <div class="panel-heading">
-            <h3 class="panel-title">Build Information</h3>
-          </div>
-          <div class="panel-body">
-            <table class="table table-condensed">
-              <tr>
-                <td><strong>Version</strong></td>
-                <td><code>{{$global.Version}}</code></td>
-              </tr>
-              <tr>
-                <td><strong>Revision</strong></td>
-                <td class="always-wrap"><code><a href="https://github.com/kyleterry/sufr/commit/{{ $global.BuildGitHash }}">{{$global.BuildGitHash}}</a></code></td>
-              </tr>
-              <tr>
-                <td><strong>Time</strong></td>
-                <td><code>{{$global.BuildTime}}</code></td>
-              </tr>
-              <tr>
-                <td><strong>Data Directory</strong></td>
-                <td><code>{{$global.DataDir}}</code></td>
-              </tr>
-            </table>
-          </div>
-        </div>
+<div class="container-md">
+    <div class="card bg-dark text-white">
+      <div class="card-header">
+        Build Info
+      </div>
+      <div class="card-body">
+        <table class="table table-sm table-dark">
+          <tr>
+            <td><strong>Version</strong></td>
+            <td><code>{{$global.Version}}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Revision</strong></td>
+            <td><code><a href="https://github.com/kyleterry/sufr/commit/{{ $global.BuildGitHash }}">{{$global.BuildGitHash}}</a></code></td>
+          </tr>
+          <tr>
+            <td><strong>Time</strong></td>
+            <td><code>{{$global.BuildTime}}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Data Directory</strong></td>
+            <td><code>{{$global.DataDir}}</code></td>
+          </tr>
+        </table>
       </div>
     </div>
-    <form class="form-horizontal" action="{{ reverse "settings" }}" method="POST">
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">API Token</label>
-        <div class="col-xs-12 col-md-10">
-          <code>{{ $global.APIToken.String }}</code>
-          <a class="btn btn-default" href="{{ reverse "api-token-roll" }}" role="button">Roll</a>
-          <span class="help-block">API tokens are used to run things like backups with cron and eventually access the API</span>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Visibility</label>
-        <div class="col-xs-12 col-md-10">
-          <div class="radio">
-            <label>
-              <input id="visibility-public" type="radio" name="private" value="false" {{ if eq $settings.Private false }}checked{{end}}> 
+
+  <div class="row my-5">
+    <form class="form-inline col-12" action="{{ reverse "api-token-roll" }}" method="GET">
+      <label class="my-1 ml-0 mr-2 col-form-label" for="api-token">API Token</label>
+      <input type="text" readonly class="form-control form-control-plaintext p-2 mb-2 mr-sm-2" id="api-token" value="{{ $global.APIToken.String }}">
+      <button type="submit" class="btn btn-primary mb-2">Generate</button>
+    </form>
+    <small class="text-muted col-12">
+      API tokens are used to run things like backups with cron and eventually access the API
+    </small>
+  </div>
+
+  <div class="row my-5">
+    <form class="form-inline col-12" action="{{ reverse "database-backup" }}" method="GET">
+      <label class="my-1 ml-0 mr-2 col-form-label">Database</label>
+      <button type="submit" class="btn btn-primary mb-2">Download</button>
+    </form>
+    <small class="text-muted col-12">
+      This allows you to download a copy of the database. It can be restored by copying it into the configured data directory.
+    </small>
+  </div>
+
+  <div class="row">
+    <form class="col-12" action="{{ reverse "settings" }}" method="POST">
+      <div class="form-group row">
+        <legend class="col-form-label col-md-2">Visibility</legend>
+        <div class="col-md-10">
+          <div class="form-check">
+            <input id="visibility-public" type="radio" name="private" value="false" {{ if eq $settings.Private false }}checked{{end}}> 
+            <label for="visibility-public" class="form-check-label">
               Public
             </label>
           </div>
-          <div class="radio">
-            <label>
-              <input id="visibility-private" type="radio" name="private" value="true" {{ if eq $settings.Private true }}checked{{end}}>
+          <div class="form-check">
+            <input id="visibility-private" type="radio" name="private" value="true" {{ if eq $settings.Private true }}checked{{end}}>
+            <label for="visibility-private" class="form-check-label">
               Private
             </label>
           </div>
-          <span class="help-block">Enable private instances if you want to hide everything from the public.</span>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Content Embedding</label>
-        <div class="col-xs-11 col-md-10">
-          <div class="checkbox">
-            <label>
-              <input id="embedphotos" type="checkbox" name="embedphotos" {{ if $settings.EmbedPhotos }}checked{{end}}>
-              Embed Photos
-            </label>
-          </div>
-          <div class="checkbox">
-            <label>
-              <input id="embedvideos" type="checkbox" name="embedvideos" {{ if $settings.EmbedVideos }}checked{{end}}>
-              Embed Videos
-            </label>
-          </div>
-          <span class="help-block">Embedding content will allow pictures and videos to be visible in your SUFR feed.</span>
+          <small class="form-text text-muted">Enable private instances if you want to hide everything from the public.</small>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Items Per Page</label>
-        <div class="col-xs-11 col-md-10">
+      <div class="form-group row">
+        <label class="col-md-2 col-form-label">Content Embedding</label>
+        <div class="col-md-10">
+          <div class="form-check">
+            <input id="embedphotos" type="checkbox" name="embedphotos" {{ if $settings.EmbedPhotos }}checked{{end}}>
+            <label for="embedphotos" class="form-check-label">
+              Embed Photos
+            </label>
+          </div>
+          <div class="form-check">
+            <input id="embedvideos" type="checkbox" name="embedvideos" {{ if $settings.EmbedVideos }}checked{{end}}>
+            <label for="embedvideos" class="form-check-label">
+              Embed Videos
+            </label>
+          </div>
+          <small class="form-text text-muted">Embedding content will allow pictures and videos to be visible in your SUFR feed.</small>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="col-md-2 col-form-label">Items Per Page</label>
+        <div class="col-md-10">
           <select class="form-control" name="perpage" required>
             <option value="40" {{ if eq .Settings.PerPage 40 }}selected{{ end }} >40</option>
             <option value="60" {{ if eq .Settings.PerPage 60 }}selected{{ end }} >60</option>
             <option value="100" {{ if eq .Settings.PerPage 100 }}selected{{ end }} >100</option>
           </select>
-          <span class="help-block">Items to display per page</span>
+          <small class="form-text text-muted">Items to display per page</small>
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Database</label>
-        <div class="col-xs-11 col-md-10">
-          <p class="form-control-static">
-            <a href="{{ reverse "database-backup" }}">Backup Database</a>
-          </p>
-          <span class="help-block">Restore from the backup by copying the file into: <code>{{$global.DataDir}}</code></span>
-        </div>
-      </div>
-      <div class="col-xs-12">
-      </div>
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-offset-2 col-lg-offset-2">
-          <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
+      <div class="form-group row">
+        <div class="col-md-2"></div>
+        <div class="col-md-10">
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </div>
     </form>
   </div>
+
 </div>
 {{ end }}

@@ -133,6 +133,44 @@ func createTag(opts CreateTagOptions, tx *bolt.Tx) (*Tag, error) {
 	return tag, nil
 }
 
+func GetTags() ([]*Tag, error) {
+	var tags []*Tag
+
+	err := db.bolt.View(func(tx *bolt.Tx) error {
+		var err error
+
+		tags, err = getTags(tx)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "transaction failed")
+	}
+
+	return tags, nil
+}
+
+func getTags(tx *bolt.Tx) ([]*Tag, error) {
+	var tags []*Tag
+	bucket := tx.Bucket(buckets[tagKey])
+
+	bucket.ForEach(func(_, v []byte) error {
+		tag := Tag{}
+		if err := json.Unmarshal(v, &tag); err != nil {
+			return err
+		}
+
+		tags = append(tags, &tag)
+
+		return nil
+	})
+
+	return tags, nil
+}
+
 func GetTag(id uuid.UUID) (*Tag, error) {
 	var tag *Tag
 

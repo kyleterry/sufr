@@ -2,11 +2,10 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 )
-
-const Version = "1.1.1-dev"
 
 const (
 	BucketNameRoot = "sufr"
@@ -14,6 +13,8 @@ const (
 	BucketNameUser = "user"
 	BucketNameTag  = "tag"
 	DBFileMode     = 0755
+	DefaultVersion = "dev"
+	// Version        = "1.0.0"
 )
 
 var (
@@ -23,17 +24,19 @@ var (
 	BuildGitHash string
 	DataDir      string
 	DatabaseFile string
+	Version      string
 )
 
 var (
-	DefaultDataDir   = fmt.Sprintf(filepath.Join(os.Getenv("HOME"), ".config", "sufr", "data"))
+	DefaultDataDir   = filepath.Join(os.Getenv("HOME"), ".config", "sufr", "data")
 	DefaultUserAgent = fmt.Sprintf("Linux:SUFR:v%s", Version)
 )
 
 const (
-	DefaultBindAddr       = "localhost:8090"
-	DefaultDatabaseName   = "sufr.db"
-	DefaultResultsPerPage = 40
+	DefaultBindAddr        = "localhost:8090"
+	DefaultDatabaseName    = "sufr.db"
+	DefaultSQLDatabaseName = "sufr-sql.db"
+	DefaultResultsPerPage  = 40
 )
 
 type BuildInfo struct {
@@ -71,12 +74,13 @@ func SetDefaults(cfg *Config) {
 }
 
 type Config struct {
-	BindAddr         string `env:"SUFR_BIND_ADDR"`
-	DataDir          string `env:"SUFR_DATA_DIR"`
-	ResultsPerPage   int    `env:"SUFR_RESULTS_PER_PAGE"`
-	UserAgent        string `env:"SUFR_USER_AGENT"`
-	DatabaseFilename string `env:"SUFR_DATABASE_FILENAME"`
-	Debug            bool   `env:"SUFR_DEBUG"`
+	BindAddr         string   `env:"SUFR_BIND_ADDR"`
+	DataDir          string   `env:"SUFR_DATA_DIR"`
+	ResultsPerPage   int      `env:"SUFR_RESULTS_PER_PAGE"`
+	UserAgent        string   `env:"SUFR_USER_AGENT"`
+	DatabaseFilename string   `env:"SUFR_DATABASE_FILENAME"`
+	Debug            bool     `env:"SUFR_DEBUG"`
+	DatabaseURL      *url.URL `env:"SUFR_DATABASE_URL"`
 
 	// build time information
 	Build BuildInfo
@@ -84,4 +88,8 @@ type Config struct {
 
 func (c Config) DatabaseFile() string {
 	return filepath.Join(c.DataDir, c.DatabaseFilename)
+}
+
+func (c Config) SQLDatabaseFile() string {
+	return filepath.Join(c.DataDir, DefaultSQLDatabaseName)
 }

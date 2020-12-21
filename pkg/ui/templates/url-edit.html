@@ -1,47 +1,56 @@
 {{ define "title" }}Editing {{ .URL.Title }}{{ end }}
 {{ define "content" }}
 {{ $url := .URL }}
-<div class="row">
-  <div class="col-xs-12">
-    <form class="form-horizontal" action="{{ reverse "url-save" "id" $url.ID }}" method="POST">
-      <div class="form-group">
-        <label for="title" class="col-xs-12 col-md-2 control-label">Title</label>
-        <div class="col-xs-12 col-md-10">
-          <input id="title" class="form-control" type="text" name="title" value="{{$url.Title}}" placeholder="Example URL Title">
+<div class="container-md">
+  <form action="{{ reverse "url-save" "id" $url.ID }}" method="POST">
+    <div class="form-group row">
+      <label for="title" class="col-md-2 col-form-label">Title</label>
+      <div class="col-md-10">
+        <input id="title" class="form-control" type="text" name="title" value="{{$url.Title}}" placeholder="Example URL Title" required>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="tags" class="col-md-2 col-form-label">Tags</label>
+      <div class="col-md-10">
+        <input id="tags" class="form-control" type="text" name="tags" value="{{ $url.GetTagsForDisplay }}" placeholder="computer-science lisp compilers" autocapitalize="none">
+        <small class="form-text text-muted">
+          Tags must be separated by a space
+        </small>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label for="notes" class="col-md-2 col-form-label">Notes</label>
+      <div class="col-md-10">
+        <textarea id="notes" class="form-control" rows="5" name="notes" autocapitalize="none">{{ $url.Notes }}</textarea>
+        <small class="form-text text-muted">
+          Your space. Say what you want. With Markdown.
+        </small>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <legend class="col-form-label col-md-2 pt-0">Visibility</legend>
+      <div class="col-md-10">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="private" name="private"{{ if $url.Private }} checked{{end}}>
+          <label class="form-check-label" for="private">
+            Private
+            <small class="form-text text-muted">
+              Private only applies when the global setting is public.
+            </small>
+          </label>
         </div>
       </div>
-      <div class="form-group">
-        <label for="tags" class="col-xs-12 col-md-2 control-label">Tags</label>
-        <div class="col-xs-12 col-md-10">
-          <input id="tags" class="form-control" type="text" name="tags" value="{{ $url.GetTagsForDisplay }}" placeholder="computer-science lisp compilers" autocapitalize="none">
-        </div>
-        <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Tags must be separated by a space</span>
+    </div>
+
+    <div class="form-group row">
+      <div class="col-md-2"></div>
+      <div class="col-md-10">
+        <button type="submit" class="btn btn-primary">Submit</button>
       </div>
-      <div class="form-group">
-        <label for="notes" class="col-xs-12 col-md-2 control-label">Notes</label>
-        <div class="col-xs-12 col-md-10">
-          <textarea id="notes" class="form-control" rows="5" name="notes" autocapitalize="none">{{ $url.Notes }}</textarea>
-        </div>
-        <span id="helpBlock" class="col-xs-12 col-md-offset-2 help-block">Your space. Say what you want. With Markdown.</span>
-      </div>
-      <div class="form-group">
-        <label class="col-xs-12 col-md-2 control-label">Visibility</label>
-        <div class="col-xs-12 col-md-10">
-          <div class="checkbox">
-            <label>
-              <input id="private" type="checkbox" name="private" {{ if $url.Private }}checked{{end}}>
-              Private
-            </label>
-          </div>
-          <span id="helpBlock" class="help-block">Private only applies when the global setting is public.</span>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-offset-2">
-          <button type="submit" class="btn btn-default">Save</button><a class="btn" href="{{ reverse "url-index" }}">cancel</a>
-        </div>
-      </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </div>
 {{ end }}

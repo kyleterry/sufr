@@ -77,7 +77,7 @@ func New(cfg *config.Config) *Sufr {
 		cfg: cfg,
 	}
 
-	// Wrapped middlware
+	// Wrapped middleware
 	all := alice.New(SetSettingsHandler, SetLoggedInHandler, LoggingHandler, SetPinnedTagsHandler)
 	auth := alice.New(AuthHandler)
 	auth = auth.Extend(all)

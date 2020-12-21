@@ -45,7 +45,7 @@ func (a *Sufr) perPage(r *http.Request) int {
 }
 
 func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewPageIndexPaginator(page(r))
+	paginator, err := data.NewPageIndexPaginator(data.PageIndexTypeAllURLs, page(r))
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
@@ -58,9 +58,10 @@ func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 
 	templateData := ctx.Value(templateDataKey).(map[string]interface{})
-	templateData["Count"] = len(paginator.URLs())
+	templateData["Count"] = paginator.TotalPageRecords()
 	templateData["URLs"] = paginator.URLs()
 	templateData["Paginator"] = paginator
+	templateData["Title"] = "All"
 
 	ctx = context.WithValue(ctx, templateDataKey, templateData)
 
@@ -68,7 +69,7 @@ func (a *Sufr) urlIndexHandler(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error {
-	paginator, err := data.NewURLPaginator(page(r), a.perPage(r), 3, data.FavURLGetter{})
+	paginator, err := data.NewPageIndexPaginator(data.PageIndexTypeFavoriteURLs, page(r))
 	if err != nil {
 		if errors.Cause(err) == data.ErrNotFound {
 			w.WriteHeader(http.StatusNotFound)
@@ -81,8 +82,8 @@ func (a *Sufr) urlFavoritesHandler(w http.ResponseWriter, r *http.Request) error
 	ctx := r.Context()
 
 	templateData := ctx.Value(templateDataKey).(map[string]interface{})
-	templateData["Count"] = len(paginator.URLs)
-	templateData["URLs"] = paginator.URLs
+	templateData["Count"] = paginator.TotalPageRecords()
+	templateData["URLs"] = paginator.URLs()
 	templateData["Paginator"] = paginator
 	templateData["Title"] = "Favorites"
 
@@ -133,7 +134,7 @@ func (a *Sufr) urlSubmitHandler(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
+	if err := a.updatePageIndexes(a.perPage(r)); err != nil {
 		return err
 	}
 
@@ -269,7 +270,7 @@ func (a *Sufr) urlSaveHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "failed to get url")
 	}
 
-	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
+	if err := a.updatePageIndexes(a.perPage(r)); err != nil {
 		return err
 	}
 
@@ -299,7 +300,7 @@ func (a *Sufr) urlDeleteHandler(w http.ResponseWriter, r *http.Request) error {
 		return errors.Wrap(err, "failed to delete url")
 	}
 
-	if err := data.CreatePageIndexes(a.perPage(r)); err != nil {
+	if err := a.updatePageIndexes(a.perPage(r)); err != nil {
 		return err
 	}
 
@@ -587,7 +588,7 @@ func (a *Sufr) settingsHandler(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	if err := data.CreatePageIndexes(settings.PerPage); err != nil {
+	if err := a.updatePageIndexes(settings.PerPage); err != nil {
 		return err
 	}
 
@@ -644,7 +645,7 @@ func (a Sufr) healthzHandler(w http.ResponseWriter, r *http.Request) error {
 func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
 	query := r.FormValue("q")
 	if query == "" {
-		http.Error(w, "no query", http.StatusBadRequest)
+		http.Redirect(w, r, reverse("url-index"), http.StatusSeeOther)
 		return nil
 	}
 
@@ -659,11 +660,21 @@ func (a Sufr) searchHandler(w http.ResponseWriter, r *http.Request) error {
 	templateData["Count"] = len(paginator.URLs)
 	templateData["URLs"] = paginator.URLs
 	templateData["Paginator"] = paginator
-	templateData["IsSearch"] = true
 	templateData["Query"] = query
 
 	ctx = context.WithValue(ctx, templateDataKey, templateData)
 
-	return renderTemplate(w, r.WithContext(ctx), "url-search-index")
+	return renderTemplate(w, r.WithContext(ctx), "url-index")
 
+}
+
+func (a Sufr) updatePageIndexes(perPage int) error {
+	all := data.NewPageIndexManager(data.PageIndexTypeAllURLs)
+	if err := all.CreatePageIndexes(perPage); err != nil {
+		return err
+	}
+
+	fav := data.NewPageIndexManager(data.PageIndexTypeFavoriteURLs)
+
+	return fav.CreatePageIndexes(perPage)
 }

@@ -1,23 +1,29 @@
 {{ define "title" }}Login{{ end }}
 {{ define "content" }}
 <div class="row">
-  <p class="lead text-center text-muted"><img src="/static/images/sufr-logo.svg"></p>
-  <div class="col-xs-12 col-md-6 col-md-offset-3">
-    <form action="{{ reverse "login" }}" method="POST">
-      <fieldset>
-        <div class="form-group">
-          <label for="email" class="control-label">Email</label>
-          <input class="form-control input-lg" id="email" type="email" name="email" placeholder="kyle@example.com" autocapitalize="none">
-        </div>
-        <div class="form-group">
-          <label for="password" class="control-label">Password</label>
-          <input id="password" class="form-control input-lg" type="password" name="password">
-        </div>
-        <div class="form-group">
-          <button type="submit" class="btn btn-default">Login</button>
-        </div>
-      </fieldset>
-    </form>
+  <div class="col-md-2"></div>
+  <div class="col-md-10">
+    <img src="/static/images/sufr-logo.svg" alt="SUFR logo"></p>
   </div>
 </div>
+<form action="{{ reverse "login" }}" method="POST">
+  <div class="form-group row">
+    <label class="col-md-2 col-form-label" for="email" class="control-label">Email</label>
+    <div class="col-md-10">
+      <input class="form-control input-lg" id="email" type="email" name="email" placeholder="kyle@example.com" autocapitalize="none" required>
+    </div>
+  </div>
+  <div class="form-group row">
+    <label class="col-md-2 col-form-label" for="password" class="control-label">Password</label>
+    <div class="col-md-10">
+      <input id="password" class="form-control input-lg" type="password" name="password" required>
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-md-2"></div>
+    <div class="col-md-10">
+      <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+  </div>
+</form>
 {{ end }}

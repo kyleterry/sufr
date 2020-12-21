@@ -16,6 +16,8 @@ type Paginator interface {
 	NextPage() int
 	PreviousPage() int
 	TotalPages() int
+	TotalRecords() int
+	TotalPageRecords() int
 	URLs() []*URL
 }
 
@@ -103,6 +105,15 @@ func (p URLPaginator) HasNext() bool       { return p.page < p.TotalPages() }
 func (p URLPaginator) TotalPages() int {
 	return int(math.Ceil(float64(p.numRecords) / float64(p.perPage)))
 }
+
+func (p URLPaginator) TotalRecords() int {
+	return p.numRecords
+}
+
+func (p URLPaginator) TotalPageRecords() int {
+	return len(p.URLs)
+}
+
 func (p URLPaginator) PreviousPage() int {
 	if p.page == 1 {
 		return p.page

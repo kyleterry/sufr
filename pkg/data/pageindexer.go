@@ -10,11 +10,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+type PageIndexType int
+
+const (
+	PageIndexTypeAllURLs PageIndexType = iota
+	PageIndexTypeFavoriteURLs
+)
+
 // PageIndex is a quick and dirty hack to cache the URL pages in bolt
 type PageIndex struct {
-	URLIDs     []uuid.UUID `json:"url_ids"`
-	TotalPages int         `json:"total_pages"`
-	PerPage    int         `json:"per_page"`
+	URLIDs       []uuid.UUID `json:"url_ids"`
+	TotalPages   int         `json:"total_pages"`
+	TotalRecords int         `json:"total_records"`
+	PerPage      int         `json:"per_page"`
 
 	URLs []*URL `json:"-"`
 }
@@ -26,19 +34,28 @@ func (pi *PageIndex) fillURLS(tx *bolt.Tx) error {
 			return errors.Wrap(err, "failed to get url")
 		}
 
+		if err := url.fillTags(tx); err != nil {
+			return errors.Wrap(err, "failed to fill url tags")
+		}
+
 		pi.URLs = append(pi.URLs, url)
 	}
 
 	return nil
 }
 
-func GetPageIndexes() ([]*PageIndex, error) {
+type PageIndexManager struct {
+	bucketKey []byte
+	urlGetter urlGetter
+}
+
+func (pim *PageIndexManager) GetAllPageIndexes() ([]*PageIndex, error) {
 	var pis []*PageIndex
 
 	err := db.bolt.View(func(tx *bolt.Tx) error {
 		var err error
 
-		pis, err = getPageIndexes(tx)
+		pis, err = pim.getAllPageIndexes(tx)
 		if err != nil {
 			return err
 		}
@@ -52,10 +69,10 @@ func GetPageIndexes() ([]*PageIndex, error) {
 	return pis, nil
 }
 
-func getPageIndexes(tx *bolt.Tx) ([]*PageIndex, error) {
+func (pim *PageIndexManager) getAllPageIndexes(tx *bolt.Tx) ([]*PageIndex, error) {
 	var pis []*PageIndex
 
-	bucket := tx.Bucket(buckets[pageIndexKey])
+	bucket := tx.Bucket(pim.bucketKey)
 
 	bucket.ForEach(func(_, v []byte) error {
 		pi := PageIndex{}
@@ -72,13 +89,13 @@ func getPageIndexes(tx *bolt.Tx) ([]*PageIndex, error) {
 	return pis, nil
 }
 
-func GetPageIndexByPage(page int) (*PageIndex, error) {
+func (pim *PageIndexManager) GetPageIndexByPage(page int) (*PageIndex, error) {
 	var pi *PageIndex
 
 	err := db.bolt.View(func(tx *bolt.Tx) error {
 		var err error
 
-		pi, err = getPageIndexByPage(page, tx)
+		pi, err = pim.getPageIndexByPage(page, tx)
 		if err != nil {
 			return err
 		}
@@ -92,10 +109,10 @@ func GetPageIndexByPage(page int) (*PageIndex, error) {
 	return pi, nil
 }
 
-func getPageIndexByPage(page int, tx *bolt.Tx) (*PageIndex, error) {
+func (pim *PageIndexManager) getPageIndexByPage(page int, tx *bolt.Tx) (*PageIndex, error) {
 	var pi PageIndex
 
-	bucket := tx.Bucket(buckets[pageIndexKey])
+	bucket := tx.Bucket(pim.bucketKey)
 
 	idb := make([]byte, 8)
 	binary.BigEndian.PutUint64(idb, uint64(page-1))
@@ -112,7 +129,7 @@ func getPageIndexByPage(page int, tx *bolt.Tx) (*PageIndex, error) {
 	return &pi, nil
 }
 
-func CreatePageIndexes(perPage int) error {
+func (pim *PageIndexManager) CreatePageIndexes(perPage int) error {
 	tx, err := db.bolt.Begin(true)
 	if err != nil {
 		return err
@@ -120,7 +137,7 @@ func CreatePageIndexes(perPage int) error {
 
 	defer tx.Rollback()
 
-	if err := createPageIndexes(perPage, tx); err != nil {
+	if err := pim.createPageIndexes(perPage, tx); err != nil {
 		return errors.Wrap(err, "failed to create page indexes")
 	}
 
@@ -131,41 +148,43 @@ func CreatePageIndexes(perPage int) error {
 	return nil
 }
 
-func createPageIndexes(perPage int, tx *bolt.Tx) error {
+func (pim *PageIndexManager) createPageIndexes(perPage int, tx *bolt.Tx) error {
 	var pis []*PageIndex
 
-	urls, err := getURLs(tx)
+	urls, err := pim.urlGetter.GetURLs(tx)
 	if err != nil {
 		return err
 	}
 
-	totalPages := int(math.Ceil(float64(len(urls)) / float64(perPage)))
+	totalURLs := len(urls)
 
-	pi := &PageIndex{
-		TotalPages: totalPages,
-		PerPage:    perPage,
+	totalPages := int(math.Ceil(float64(totalURLs) / float64(perPage)))
+
+	newPageIndex := func() *PageIndex {
+		return &PageIndex{
+			TotalPages:   totalPages,
+			TotalRecords: totalURLs,
+			PerPage:      perPage,
+		}
 	}
+
+	pi := newPageIndex()
 
 	for i, u := range urls {
 		pi.URLIDs = append(pi.URLIDs, u.ID)
 
-		if len(pi.URLIDs) == perPage || i == len(urls)-1 {
+		if len(pi.URLIDs) == perPage || i == totalURLs-1 {
 			pis = append(pis, pi)
 
-			pi = &PageIndex{
-				TotalPages: totalPages,
-				PerPage:    perPage,
-			}
+			pi = newPageIndex()
 		}
 	}
 
-	bucketKey := buckets[pageIndexKey]
-
-	if err := tx.DeleteBucket(bucketKey); err != nil {
+	if err := tx.DeleteBucket(pim.bucketKey); err != nil {
 		return err
 	}
 
-	bucket, err := tx.CreateBucket(bucketKey)
+	bucket, err := tx.CreateBucket(pim.bucketKey)
 	if err != nil {
 		return err
 	}
@@ -190,6 +209,29 @@ func createPageIndexes(perPage int, tx *bolt.Tx) error {
 	return nil
 }
 
+func NewPageIndexManager(pit PageIndexType) *PageIndexManager {
+	var bucketKey []byte
+	var ug urlGetter
+
+	switch pit {
+	case PageIndexTypeAllURLs:
+		bucketKey = buckets[allURLsIndex]
+		ug = AllURLGetter{}
+	case PageIndexTypeFavoriteURLs:
+		bucketKey = buckets[favoriteURLsIndex]
+		ug = FavURLGetter{}
+	}
+
+	return &PageIndexManager{
+		bucketKey: bucketKey,
+		urlGetter: ug,
+	}
+}
+
 func HACKCreatePageIndexes(perPage int, tx *bolt.Tx) error {
-	return createPageIndexes(perPage, tx)
+	if err := NewPageIndexManager(PageIndexTypeAllURLs).createPageIndexes(perPage, tx); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -29,17 +29,19 @@ const (
 	appKey bucketKey = iota
 	urlKey
 	tagKey
-	pageIndexKey
+	allURLsIndex
+	favoriteURLsIndex
 	apiTokenKey
 )
 
 var (
 	buckets = map[bucketKey][]byte{
-		appKey:       []byte("_app"),
-		urlKey:       []byte("_urls"),
-		tagKey:       []byte("_tags"),
-		pageIndexKey: []byte("_page_index"),
-		apiTokenKey:  []byte("_api_tokens"),
+		appKey:            []byte("_app"),
+		urlKey:            []byte("_urls"),
+		tagKey:            []byte("_tags"),
+		allURLsIndex:      []byte("_all_urls_page_index"),
+		favoriteURLsIndex: []byte("_favorite_urls_page_index"),
+		apiTokenKey:       []byte("_api_tokens"),
 	}
 )
 
@@ -81,8 +83,6 @@ func RunWithBucketForType(tx *bolt.Tx, m interface{}, fn func(*bolt.Bucket) erro
 		key = urlKey
 	case Tag:
 		key = tagKey
-	case PageIndex:
-		key = pageIndexKey
 	case APIToken:
 		key = apiTokenKey
 	case Settings, PinnedTag, PinnedTags, User:

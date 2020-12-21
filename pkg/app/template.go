@@ -19,9 +19,9 @@ var templateMap = map[string]*template.Template{
 	"url-view":     mustCreateTemplate("templates/base.html", "templates/url-view.html"),
 	"url-edit":     mustCreateTemplate("templates/base.html", "templates/url-edit.html"),
 	"settings":     mustCreateTemplate("templates/base.html", "templates/settings.html"),
-	"registration": mustCreateTemplate("templates/config-base.html", "templates/register.html"),
-	"login":        mustCreateTemplate("templates/config-base.html", "templates/login.html"),
-	"404":          mustCreateTemplate("templates/config-base.html", "templates/404.html"),
+	"registration": mustCreateTemplate("templates/base.html", "templates/register.html"),
+	"login":        mustCreateTemplate("templates/base.html", "templates/login.html"),
+	"404":          mustCreateTemplate("templates/base.html", "templates/404.html"),
 }
 
 var templateFuncs = template.FuncMap{

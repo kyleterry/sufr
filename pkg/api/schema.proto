@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package protobuf.sufr.api;
+option go_package = "github.com/kyleterry/sufr/pkg/api";
+
+import "pkg/api/timestamp.proto";
+
+message URL {
+    string id = 1;
+    string url = 2;
+    string title = 3;
+    string content_type = 4;
+    Timestamp created_at = 30;
+    Timestamp updated_at = 31;
+}
+
+message Tag {
+    string id = 1;
+    string name = 2;
+    Timestamp created_at = 30;
+    Timestamp updated_at = 31;
+}
+
+message TagList {
+    repeated Tag items = 1;
+}
+
+message Category {
+    string label = 1;
+    TagList tags = 2;
+}
+
+message User {
+    string id = 1;
+    string email = 2;
+    bytes password_hash = 3;
+    string api_token = 4;
+    bool embed_content = 6;
+    bool activated = 7;
+    repeated Category pinned_categories = 8;
+    Timestamp created_at = 30;
+    Timestamp updated_at = 31;
+}
+
+message UserURL {
+    string id = 1;
+    User user = 2;
+    URL url = 3;
+    TagList tags = 4;
+    string title = 5;
+    string derived_title = 6;
+    bool favorite = 7;
+    int64 row = 8;
+    Timestamp created_at = 30;
+    Timestamp updated_at = 31;
+}

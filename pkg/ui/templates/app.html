@@ -1,0 +1,122 @@
+{{ define "base" }}
+<!doctype html>
+<html>
+  <head>
+    <title>{{ template "components/title" . }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link type="text/css" rel="stylesheet" href="/static/css/sufr.css">
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
+    <script src="/static/js/jquery-3.5.1.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    <script src="/static/js/app.js"></script>
+  </head>
+  <body>
+    <a class="sr-only sr-only-focusable" href="#main-content">Skip to main content</a>
+    {{ template "components/header" . }}
+    {{ template "components/content" . }}
+    {{ template "components/footer" . }}
+  </body>
+</html>
+{{ end }}
+
+{{ define "components/title" }}
+{{ if .Title }}{{ .Title }} - {{ end -}} SUFR
+{{end}}
+
+{{ define "components/flash" }}
+  {{- range $key, $values := .Flashes }}
+  {{- range $message := $values }}
+  <div class="alert alert-{{ $key }}">
+    <button class="close" data-dismiss="alert">×</button>
+    {{ $message }}
+  </div>
+  {{- end }}
+  {{- end }}
+{{ end }}
+
+{{ define "components/header" }}
+  <header class="navbar navbar-expand-md navbar-dark bg-dark flex-row flex-md-nowrap px-md-5" role="banner">
+    <a class="navbar-brand mr-auto" href="/" aria-label="SUFR">
+      <img height="38" src="/static/images/sufr-logo.svg" alt="SUFR logo">
+    </a>
+    <button class="btn d-md-none collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="navbar-nav ml-md-auto">
+      {{- if .User }}
+        <li class="nav-item">
+          <a class="nav-link" href="/urls/new" aria-label="Add URL">
+            Add URL
+          </a>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="/help">Help</a></li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle mr-md-2" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" aria-label="User menu">{{ .User.Email }}</a>
+          <div class="dropdown-menu">
+            <a class="dropdown-item text-reset" href="/settings">Settings</a>
+            <a class="dropdown-item text-reset" href="/logout">Logout</a>
+          </div>
+        </li>
+      {{- else }}
+        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+      {{- end }}
+      </ul>
+    </div>
+  </header>
+{{end}}
+
+{{ define "components/footer" }}
+  <div class="device-xs visible-xs"></div>
+  <div class="device-sm visible-sm"></div>
+  <div class="device-md visible-md"></div>
+  <div class="device-lg visible-lg"></div>
+{{end}}
+
+{{ define "components/content" }}
+  <div class="container-fluid bg-dark text-light">
+    <div class="row align-items-start">
+    {{- if .User }}
+      <aside class="col-lg-2 col-md-3 bg-dark p-0 sticky-top">
+        {{ template "components/sidebar" . }}
+      </aside>
+    {{- end }}
+      <main id="main-content" class="col-lg-10 col-md-9 pl-md-0 py-1 py-md-3" role="main">
+        {{ template "flash" . }}
+        {{ .Content }}
+      </main>
+    </div>
+  </div>
+{{ end }}
+
+{{ define "components/sidebar" }}
+  <form class="d-flex align-items-center p-3" action="/search" method="GET">
+    <input class="form-control" name="q" type="search" placeholder="search">
+    <button class="btn d-md-none collapsed" type="button" role="button" data-toggle="collapse" data-target="#sidebar" aria-controls="sidebar" aria-expanded="false">
+      <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-menu-button-wide-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M14 7H2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM2 6a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H2z"/>
+        <path fill-rule="evenodd" d="M15 11H1v-1h14v1zM2 12.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM1.5 0A1.5 1.5 0 0 0 0 1.5v2A1.5 1.5 0 0 0 1.5 5h13A1.5 1.5 0 0 0 16 3.5v-2A1.5 1.5 0 0 0 14.5 0h-13zm1 2a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zm9.927.427l.396.396a.25.25 0 0 0 .354 0l.396-.396A.25.25 0 0 0 13.396 2h-.792a.25.25 0 0 0-.177.427z"/>
+      </svg>
+    </button>
+  </form>
+
+  <nav id="sidebar" class="d-md-block sidebar collapse pl-3" role="navigation">
+    <ul class="nav flex-column">
+      <li class="nav-item mb-3">
+        <a class="nav-link text-reset" href="{{ reverse "url-favorites" }}">Favorites</a>
+      </li>
+      {{- range $cat := .User.PinnedCategories }}
+      <li class="nav-item mb-3">
+        <a class="nav-link text-reset" href="?tags={{ tagNames $cat.Tags }}">{{ $cat.Label }}</a>
+      </li>
+      {{- end }}
+    </ul>
+  </nav>
+{{ end }}
+
+{{ define "pages/timeline" }}
+{{ end }}
+
+{{ define "partials/timeline-item" }}
+{{ end }}

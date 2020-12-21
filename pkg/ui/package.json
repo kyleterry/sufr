@@ -1,0 +1,17 @@
+{
+  "name": "sufr-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "scss-powertools -m scss/sufr.scss static/css/sufr.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bootstrap": "^4.5.3"
+  },
+  "devDependencies": {
+    "scss-powertools": "^1.2.1"
+  }
+}
